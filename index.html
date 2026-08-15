@@ -2,34 +2,22 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vôlei de Praia - Super Cabeçudões</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vôlei de Praia - Super Avatares</title>
   <style>
-    * {
-      box-sizing: border-box;
-      user-select: none;
-    }
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     body {
       margin: 0;
       padding: 0;
-      background: #1a1a24;
+      background: #0f172a;
       color: #fff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      justify-content: space-between;
+      height: 100vh;
       overflow: hidden;
-    }
-
-    h1 {
-      margin: 10px 0;
-      font-size: 2rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: #ffda79;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
     }
 
     /* Tela de Seleção */
@@ -37,330 +25,268 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: #2c2c38;
-      padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      border: 2px solid #444458;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      background: #1e293b;
     }
-
-    .turn-indicator {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
+    .status-badge {
+      background: #38bdf8;
+      color: #0f172a;
       padding: 8px 16px;
       border-radius: 20px;
-      background: #383848;
-      color: #70a1ff;
       font-weight: bold;
+      margin-bottom: 20px;
     }
-
-    .character-grid {
+    .grid {
       display: grid;
-      grid-template-columns: repeat(3, 130px);
+      grid-template-columns: repeat(3, 100px);
       gap: 15px;
     }
-
-    .char-card {
-      background: #383848;
-      border: 3px solid #555568;
+    .card {
+      background: #334155;
+      border: 2px solid #475569;
       border-radius: 12px;
       padding: 10px;
+      text-align: center;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: all 0.2s ease-in-out;
     }
-
-    .char-card:hover {
-      transform: translateY(-5px);
-      border-color: #ffda79;
-      background: #444458;
-    }
-
-    .char-card img {
-      width: 90px;
-      height: 110px;
-      object-fit: contain;
-    }
-
-    .char-card span {
-      margin-top: 8px;
-      font-weight: bold;
-      font-size: 1rem;
-    }
+    .card img { width: 70px; height: 90px; object-fit: contain; }
+    .card span { display: block; margin-top: 5px; font-weight: bold; font-size: 0.9rem; }
 
     /* Tela do Jogo */
     #game-container {
       display: none;
       flex-direction: column;
-      align-items: center;
+      width: 100%;
+      height: 100%;
+      justify-content: space-between;
     }
-
     canvas {
-      border: 4px solid #fff;
-      border-radius: 8px;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.6);
-      background: linear-gradient(to bottom, #70a1ff 65%, #f7b731 65%);
+      width: 100%;
+      height: 62vh;
+      display: block;
     }
 
-    .controls-info {
-      margin-top: 15px;
+    /* Controles Touch */
+    .controls {
       display: flex;
-      gap: 40px;
-      background: #2c2c38;
-      padding: 10px 25px;
-      border-radius: 30px;
-      font-size: 0.9rem;
+      width: 100%;
+      height: 38vh;
+      background: #0f172a;
+      border-top: 4px solid #38bdf8;
     }
-
-    .controls-info span {
-      color: #ffda79;
-      font-weight: bold;
+    .player-controls {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1.2fr;
+      gap: 8px;
+      padding: 10px;
     }
+    .player-controls:first-child { border-right: 2px solid #334155; }
+    .btn {
+      background: #1e293b;
+      border: 2px solid #475569;
+      border-radius: 10px;
+      color: white;
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+    .btn:active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+    .btn-jump { grid-column: span 2; font-weight: bold; font-size: 1.2rem; background: #0284c7; border-color: #38bdf8; }
   </style>
 </head>
 <body>
 
-  <h1>Vôlei de Praia - Avatares</h1>
-
-  <!-- TELA DE SELEÇÃO DE PERSONAGENS -->
+  <!-- Seleção -->
   <div id="selection-screen">
-    <div class="turn-indicator" id="turnIndicator">Jogador 1: Escolha seu Personagem</div>
-    <div class="character-grid" id="characterGrid"></div>
+    <div class="status-badge" id="status">Jogador 1: Escolha seu Personagem</div>
+    <div class="grid" id="grid"></div>
   </div>
 
-  <!-- TELA DO JOGO -->
+  <!-- Jogo -->
   <div id="game-container">
-    <canvas id="gameCanvas" width="800" height="420"></canvas>
-    <div class="controls-info">
-      <div><span>P1:</span> A (Esquerda) | D (Direita) | W (Pulo)</div>
-      <div><span>P2:</span> ← (Esquerda) | → (Direita) | ↑ (Pulo)</div>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    
+    <div class="controls">
+      <!-- Controles P1 -->
+      <div class="player-controls">
+        <div class="btn" id="p1-left">←</div>
+        <div class="btn" id="p1-right">→</div>
+        <div class="btn btn-jump" id="p1-jump">PULAR</div>
+      </div>
+      <!-- Controles P2 -->
+      <div class="player-controls">
+        <div class="btn" id="p2-left">←</div>
+        <div class="btn" id="p2-right">→</div>
+        <div class="btn btn-jump" id="p2-jump">PULAR</div>
+      </div>
     </div>
   </div>
 
 <script>
-// Lista de Personagens usando o NOME dos arquivos
 const characters = [
-  { id: 'ramon', name: 'Ramon', file: 'ramon.png' },
-  { id: 'kami',  name: 'Kami',  file: 'kami.png' },
-  { id: 'ta',    name: 'Ta',    file: 'ta.png' },
-  { id: 'manel', name: 'Manel', file: 'manel.png' },
-  { id: 'mi',    name: 'Mi',    file: 'mi.png' },
-  { id: 'tato',  name: 'Tato',  file: 'tato.png' }
+  { name: 'Ramon', file: 'ramon.png' },
+  { name: 'Kami',  file: 'kami.png' },
+  { name: 'Ta',    file: 'ta.png' },
+  { name: 'Manel', file: 'manel.png' },
+  { name: 'Mi',    file: 'mi.png' },
+  { name: 'Tato',  file: 'tato.png' }
 ];
 
-let player1Char = null;
-let player2Char = null;
-let currentSelectionStep = 1;
+let p1Char, p2Char, step = 1;
 
-const gridEl = document.getElementById('characterGrid');
-const indicatorEl = document.getElementById('turnIndicator');
-
+const grid = document.getElementById('grid');
 characters.forEach(char => {
   const card = document.createElement('div');
-  card.className = 'char-card';
-  card.innerHTML = `
-    <img src="${char.file}" alt="${char.name}">
-    <span>${char.name}</span>
-  `;
-  card.onclick = () => selectCharacter(char);
-  gridEl.appendChild(card);
+  card.className = 'card';
+  card.innerHTML = `<img src="${char.file}" alt="${char.name}"><span>${char.name}</span>`;
+  card.onclick = () => {
+    if (step === 1) {
+      p1Char = char;
+      step = 2;
+      document.getElementById('status').innerText = "Jogador 2: Escolha seu Personagem";
+    } else {
+      p2Char = char;
+      document.getElementById('selection-screen').style.display = 'none';
+      document.getElementById('game-container').style.display = 'flex';
+      startGame();
+    }
+  };
+  grid.appendChild(card);
 });
 
-function selectCharacter(char) {
-  if (currentSelectionStep === 1) {
-    player1Char = char;
-    currentSelectionStep = 2;
-    indicatorEl.innerText = "Jogador 2: Escolha seu Personagem";
-    indicatorEl.style.color = "#ff7675";
-  } else if (currentSelectionStep === 2) {
-    player2Char = char;
-    startMatch();
-  }
-}
-
-function startMatch() {
-  document.getElementById('selection-screen').style.display = 'none';
-  document.getElementById('game-container').style.display = 'flex';
-  initGameEngine();
-}
-
-// --- ENGINE DO JOGO ---
-function initGameEngine() {
+function startGame() {
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
-  const imgP1 = new Image(); imgP1.src = player1Char.file;
-  const imgP2 = new Image(); imgP2.src = player2Char.file;
+  const img1 = new Image(); img1.src = p1Char.file;
+  const img2 = new Image(); img2.src = p2Char.file;
 
-  const gravity = 0.45;
-  const groundY = 350;
+  const input = { p1L: false, p1R: false, p1J: false, p2L: false, p2R: false, p2J: false };
 
-  const net = { x: 395, y: 230, width: 10, height: 120 };
+  function bindTouch(id, key) {
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); input[key] = true; });
+    el.addEventListener('touchend', (e) => { e.preventDefault(); input[key] = false; });
+  }
 
-  let scoreP1 = 0;
-  let scoreP2 = 0;
+  bindTouch('p1-left', 'p1L'); bindTouch('p1-right', 'p1R'); bindTouch('p1-jump', 'p1J');
+  bindTouch('p2-left', 'p2L'); bindTouch('p2-right', 'p2R'); bindTouch('p2-jump', 'p2J');
 
-  const p1 = {
-    x: 120, y: groundY - 80, width: 60, height: 80,
-    vx: 0, vy: 0, speed: 6, jumpPower: -11, isGrounded: false,
-    name: player1Char.name, img: imgP1
-  };
+  const groundY = 320;
+  const p1 = { x: 100, y: groundY - 80, w: 60, h: 80, vx: 0, vy: 0, ground: false, img: img1, name: p1Char.name };
+  const p2 = { x: 640, y: groundY - 80, w: 60, h: 80, vx: 0, vy: 0, ground: false, img: img2, name: p2Char.name };
+  const ball = { x: 200, y: 120, r: 14, vx: 3.5, vy: 0, angle: 0 };
+  let s1 = 0, s2 = 0;
 
-  const p2 = {
-    x: 620, y: groundY - 80, width: 60, height: 80,
-    vx: 0, vy: 0, speed: 6, jumpPower: -11, isGrounded: false,
-    name: player2Char.name, img: imgP2
-  };
+  function loop() {
+    // Física P1
+    p1.vx = input.p1L ? -6 : input.p1R ? 6 : 0;
+    if (input.p1J && p1.ground) { p1.vy = -11.5; p1.ground = false; }
 
-  const ball = {
-    x: 200, y: 120, radius: 14,
-    vx: 3, vy: 0,
-    reset: function(servingP1) {
-      this.x = servingP1 ? 200 : 600;
-      this.y = 120;
-      this.vx = servingP1 ? 3 : -3;
-      this.vy = 0;
-    }
-  };
+    // Física P2
+    p2.vx = input.p2L ? -6 : input.p2R ? 6 : 0;
+    if (input.p2J && p2.ground) { p2.vy = -11.5; p2.ground = false; }
 
-  const keys = {};
-  window.addEventListener('keydown', e => keys[e.key] = true);
-  window.addEventListener('keyup', e => keys[e.key] = false);
-
-  function update() {
-    // P1
-    if (keys['a'] || keys['A']) p1.vx = -p1.speed;
-    else if (keys['d'] || keys['D']) p1.vx = p1.speed;
-    else p1.vx = 0;
-
-    if ((keys['w'] || keys['W']) && p1.isGrounded) {
-      p1.vy = p1.jumpPower;
-      p1.isGrounded = false;
-    }
-
-    // P2
-    if (keys['ArrowLeft']) p2.vx = -p2.speed;
-    else if (keys['ArrowRight']) p2.vx = p2.speed;
-    else p2.vx = 0;
-
-    if (keys['ArrowUp'] && p2.isGrounded) {
-      p2.vy = p2.jumpPower;
-      p2.isGrounded = false;
-    }
-
-    // Atualizar Física Jogadores
-    [p1, p2].forEach((p, idx) => {
-      p.x += p.vx;
-      p.vy += gravity;
-      p.y += p.vy;
-
-      if (p.y + p.height >= groundY) {
-        p.y = groundY - p.height;
-        p.vy = 0;
-        p.isGrounded = true;
-      }
-
-      const minX = idx === 0 ? 0 : net.x + net.width;
-      const maxX = idx === 0 ? net.x - p.width : canvas.width - p.width;
-      p.x = Math.max(minX, Math.min(maxX, p.x));
+    [p1, p2].forEach((p, i) => {
+      p.x += p.vx; p.vy += 0.48; p.y += p.vy;
+      if (p.y >= groundY - p.h) { p.y = groundY - p.h; p.vy = 0; p.ground = true; }
+      p.x = Math.max(i === 0 ? 10 : 410, Math.min(i === 0 ? 330 : 730, p.x));
     });
 
     // Física Bola
-    ball.vy += gravity * 0.45;
-    ball.x += ball.vx;
-    ball.y += ball.vy;
+    ball.vy += 0.22; ball.x += ball.vx; ball.y += ball.vy;
+    ball.angle += ball.vx * 0.05;
 
-    // Paredes
-    if (ball.x - ball.radius <= 0 || ball.x + ball.radius >= canvas.width) {
-      ball.vx *= -0.85;
-      ball.x = ball.x - ball.radius <= 0 ? ball.radius : canvas.width - ball.radius;
-    }
+    if (ball.x <= ball.r || ball.x >= 800 - ball.r) ball.vx *= -0.85;
 
-    // Rede
-    if (ball.x + ball.radius > net.x && ball.x - ball.radius < net.x + net.width && ball.y + ball.radius > net.y) {
+    // Colisão com a Rede
+    if (ball.x + ball.r > 392 && ball.x - ball.r < 408 && ball.y + ball.r > 200) {
       ball.vx *= -0.8;
-      if (ball.x < net.x + net.width / 2) ball.x = net.x - ball.radius;
-      else ball.x = net.x + net.width + ball.radius;
+      ball.x = ball.x < 400 ? 392 - ball.r : 408 + ball.r;
     }
 
     // Ponto
-    if (ball.y + ball.radius >= groundY) {
-      if (ball.x < net.x + net.width / 2) {
-        scoreP2++;
-        ball.reset(false);
-      } else {
-        scoreP1++;
-        ball.reset(true);
-      }
+    if (ball.y >= groundY - ball.r) {
+      if (ball.x < 400) s2++; else s1++;
+      ball.x = ball.x < 400 ? 600 : 200; ball.y = 120; ball.vx = ball.x === 200 ? 3.5 : -3.5; ball.vy = 0;
     }
 
-    // Colisão Jogador-Bola
+    // Colisão Bola / Jogadores (Arredondada)
     [p1, p2].forEach(p => {
-      const closestX = Math.max(p.x, Math.min(ball.x, p.x + p.width));
-      const closestY = Math.max(p.y, Math.min(ball.y, p.y + p.height));
-      const dx = ball.x - closestX;
-      const dy = ball.y - closestY;
-
-      if ((dx * dx + dy * dy) < ball.radius * ball.radius) {
-        ball.vy = -9;
-        const hitOffset = (ball.x - (p.x + p.width / 2)) / (p.width / 2);
-        ball.vx = hitOffset * 5 + p.vx * 0.5;
-      }
-    });
-  }
-
-  function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Rede
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(net.x, net.y, net.width, net.height);
-    ctx.fillStyle = '#f7b731';
-    ctx.fillRect(net.x - 2, net.y, net.width + 4, 8);
-
-    // Jogadores
-    [p1, p2].forEach(p => {
-      if (p.img.complete) {
-        ctx.drawImage(p.img, p.x, p.y, p.width, p.height);
-      } else {
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(p.x, p.y, p.width, p.height);
+      let cx = Math.max(p.x, Math.min(ball.x, p.x + p.w));
+      let cy = Math.max(p.y, Math.min(ball.y, p.y + p.h));
+      let dx = ball.x - cx;
+      let dy = ball.y - cy;
+      if ((dx * dx + dy * dy) < (ball.r * ball.r)) {
+        ball.vy = -9.5;
+        ball.vx = (ball.x - (p.x + p.w / 2)) * 0.25 + p.vx * 0.4;
       }
     });
 
-    // Bola
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#f7b731';
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#26de81';
-    ctx.stroke();
+    // --- DESENHO DA CENA ---
+    ctx.clearRect(0, 0, 800, 400);
 
-    // Placar
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    ctx.shadowBlur = 4;
-    
-    ctx.textAlign = 'left';
-    ctx.fillText(`${p1.name}: ${scoreP1}`, 30, 40);
+    // 1. Céu e Mar
+    let skyGrad = ctx.createLinearGradient(0, 0, 0, 200);
+    skyGrad.addColorStop(0, '#38bdf8');
+    skyGrad.addColorStop(1, '#bae6fd');
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, 800, 200);
 
-    ctx.textAlign = 'right';
-    ctx.fillText(`${p2.name}: ${scoreP2}`, canvas.width - 30, 40);
-    
-    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#0284c7'; ctx.fillRect(0, 200, 800, 30); // Mar de fundo
+
+    // 2. Areia da Quadra
+    let sandGrad = ctx.createLinearGradient(0, 230, 0, 400);
+    sandGrad.addColorStop(0, '#fde047');
+    sandGrad.addColorStop(1, '#eab308');
+    ctx.fillStyle = sandGrad; ctx.fillRect(0, 230, 800, 170);
+
+    // Linhas Marcadoras da Quadra
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3;
+    ctx.strokeRect(20, groundY, 760, 0);
+
+    // 3. Sombras
+    [p1, p2, ball].forEach(obj => {
+      let shadowWidth = obj.w ? obj.w : obj.r * 2;
+      let shadowFactor = Math.max(0.2, 1 - (groundY - (obj.y + (obj.h || obj.r))) / 150);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(obj.x + (obj.w ? obj.w / 2 : 0), groundY + 2, (shadowWidth / 2) * shadowFactor, 5 * shadowFactor, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 4. Jogadores
+    if (p1.img.complete) ctx.drawImage(p1.img, p1.x, p1.y, p1.w, p1.h);
+    if (p2.img.complete) ctx.drawImage(p2.img, p2.x, p2.y, p2.w, p2.h);
+
+    // 5. Postes e Rede
+    ctx.fillStyle = '#64748b'; ctx.fillRect(393, 190, 4, 130); ctx.fillRect(403, 190, 4, 130); // Hastes
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(395, 200, 10, 120); // Malha
+    ctx.fillStyle = '#ef4444'; ctx.fillRect(393, 200, 14, 8);  // Borda da Rede
+
+    // 6. Bola Estilo Vôlei de Praia
+    ctx.save();
+    ctx.translate(ball.x, ball.y);
+    ctx.rotate(ball.angle);
+    ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI * 2); ctx.fillStyle = '#facc15'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI); ctx.fillStyle = '#0284c7'; ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+
+    // 7. Placar
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText(`${p1.name}: ${s1}`, 30, 40);
+    ctx.fillText(`${p2.name}: ${s2}`, 670, 40);
+
+    requestAnimationFrame(loop);
   }
-
-  function gameLoop() {
-    update();
-    render();
-    requestAnimationFrame(gameLoop);
-  }
-
-  gameLoop();
+  loop();
 }
 </script>
 </body>
