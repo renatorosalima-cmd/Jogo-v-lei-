@@ -7,131 +7,80 @@
   <style>
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     body {
-      margin: 0;
-      padding: 0;
-      background: #0f172a;
-      color: white;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      height: 100vh;
-      overflow: hidden;
+      margin: 0; padding: 0; background: #0b132b; color: white;
+      font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; height: 100vh; overflow: hidden;
     }
 
-    /* Tela de Seleção */
-    #selection-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      width: 100%;
-      background: #1e293b;
-    }
-    .badge {
-      background: #38bdf8;
-      color: #0f172a;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #334155;
-      border: 2px solid #475569;
-      border-radius: 10px;
-      padding: 8px;
-      text-align: center;
-      cursor: pointer;
-    }
-    .card img { width: 65px; height: 80px; object-fit: contain; }
-    .card span { display: block; margin-top: 4px; font-weight: bold; font-size: 0.85rem; }
+    .screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: absolute; background: #1c2541; z-index: 10; padding: 20px; }
+    .hidden { display: none !important; }
+    
+    .badge { background: #48cae4; color: #0b132b; padding: 10px 20px; border-radius: 20px; font-weight: 800; margin-bottom: 15px; font-size: 1.1rem; }
+    .grid { display: grid; grid-template-columns: repeat(3, 105px); gap: 15px; margin-bottom: 15px; }
+    .card { background: #3a506b; border: 2px solid #5bc0be; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: transform 0.2s; }
+    .card:active { transform: scale(0.95); }
+    .card img { width: 80px; height: 100px; object-fit: contain; }
+    .card span { display: block; margin-top: 6px; font-weight: bold; font-size: 0.9rem; }
+    
+    /* Ranking Styling */
+    .ranking-box { background: #0b132b; border: 1px solid #5bc0be; border-radius: 10px; padding: 12px; width: 320px; margin-top: 10px; }
+    .ranking-title { font-weight: bold; color: #48cae4; margin-bottom: 8px; text-align: center; text-transform: uppercase; font-size: 0.9rem; }
+    .ranking-list { list-style: none; padding: 0; margin: 0; max-height: 100px; overflow-y: auto; font-size: 0.85rem; }
+    .ranking-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #1c2541; }
 
-    /* Opção de Dificuldade */
-    .diff-select {
-      margin-bottom: 15px;
-      font-weight: bold;
-    }
-    select {
-      background: #334155;
-      color: white;
-      border: 1px solid #38bdf8;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
+    select, button { background: #00b4d8; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    button:active { background: #90e0ef; color: #0b132b; }
 
-    /* Tela do Jogo */
-    #game-container {
-      display: none;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-      justify-content: space-between;
-    }
-    canvas {
-      width: 100%;
-      height: 55vh;
-      display: block;
-      background: #38bdf8;
-    }
-
-    /* Controles */
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: 1fr 1.2fr;
-      gap: 8px;
-      width: 100%;
-      height: 45vh;
-      background: #0f172a;
-      padding: 10px;
-      border-top: 3px solid #38bdf8;
-    }
-    .btn {
-      background: #1e293b;
-      border: 2px solid #475569;
-      border-radius: 10px;
-      color: white;
-      font-size: 1.2rem;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: manipulation;
-    }
-    .btn:active { background: #38bdf8; color: #0f172a; }
-    .btn-action { background: #0284c7; border-color: #38bdf8; }
-    .btn-jump { grid-column: span 4; background: #22c55e; border-color: #4ade80; font-size: 1.4rem; }
+    #game-container { display: flex; flex-direction: column; width: 100%; height: 100%; justify-content: space-between; position: relative; }
+    canvas { width: 100%; height: 60vh; display: block; }
+    
+    #top-bar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; z-index: 5; }
+    
+    .controls { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1.2fr; gap: 8px; width: 100%; height: 40vh; background: #0b132b; padding: 12px; }
+    .btn { background: #1c2541; border: 2px solid #3a506b; border-radius: 12px; color: white; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .btn-action { background: #0077b6; border-color: #00b4d8; }
+    .btn-jump { grid-column: span 4; background: #38b000; border-color: #70e000; font-size: 1.3rem; }
   </style>
 </head>
 <body>
 
-  <!-- TELA DE SELEÇÃO -->
-  <div id="selection-screen">
+  <!-- MENU INICIAL -->
+  <div id="selection-screen" class="screen">
     <div class="badge" id="status">Jogador 1: Escolha seu Personagem</div>
     <div class="grid" id="grid"></div>
     
-    <div class="diff-select">
-      Dificuldade da IA: 
+    <div style="margin-bottom: 10px; font-size: 0.9rem;">
+      Dificuldade IA: 
       <select id="aiLevel">
-        <option value="0.03">Fácil</option>
-        <option value="0.07" selected>Médio</option>
-        <option value="0.13">Difícil</option>
+        <option value="easy">Fácil</option>
+        <option value="medium" selected>Médio</option>
+        <option value="hard">Difícil</option>
       </select>
+    </div>
+
+    <!-- BOX DE RANKING -->
+    <div class="ranking-box">
+      <div class="ranking-title">🏆 Ranking de Vitórias</div>
+      <ul class="ranking-list" id="ranking-ul"></ul>
     </div>
   </div>
 
-  <!-- TELA DO JOGO -->
+  <!-- TELA DE FIM DE JOGO -->
+  <div id="gameover-screen" class="screen hidden">
+    <h1 id="winner-text" style="color:#48cae4; font-size: 2rem;">Jogador Venceu!</h1>
+    <p id="final-score" style="font-size: 1.2rem; margin-bottom: 20px;">Placar: 12 x 10</p>
+    <div style="display:flex; gap: 12px;">
+      <button onclick="restartMatch()">Jogar Novamente</button>
+      <button onclick="goToMenu()" style="background:#3a506b;">Menu Principal</button>
+    </div>
+  </div>
+
+  <!-- CONTAINER DO JOGO -->
   <div id="game-container">
+    <div id="top-bar">
+      <button onclick="goToMenu()" style="padding: 6px 12px; font-size: 0.8rem; background:#3a506b;">Menu</button>
+    </div>
+    
     <canvas id="gameCanvas" width="800" height="400"></canvas>
     
     <div class="controls">
@@ -153,8 +102,36 @@ const characters = [
   { name: 'Tato',  file: 'tato.png' }
 ];
 
-let p1Char, p2Char, step = 1;
-let aiSpeed = 0.07;
+let p1Char, p2Char, step = 1, aiDifficulty = 'medium';
+let s1 = 0, s2 = 0;
+const MAX_POINTS = 12;
+
+// Sistema de Ranking LocalStorage
+function getRanking() {
+  return JSON.parse(localStorage.getItem('volei_ranking') || '{}');
+}
+
+function saveWin(playerName) {
+  const rank = getRanking();
+  rank[playerName] = (rank[playerName] || 0) + 1;
+  localStorage.setItem('volei_ranking', JSON.stringify(rank));
+  renderRanking();
+}
+
+function renderRanking() {
+  const rank = getRanking();
+  const ul = document.getElementById('ranking-ul');
+  ul.innerHTML = '';
+  const sorted = Object.entries(rank).sort((a,b) => b[1] - a[1]);
+  if(sorted.length === 0) {
+    ul.innerHTML = '<li style="text-align:center; color:#888;">Nenhuma vitória salva</li>';
+    return;
+  }
+  sorted.forEach(([name, wins]) => {
+    ul.innerHTML += `<li class="ranking-item"><span>${name}</span> <b>${wins} vitórias</b></li>`;
+  });
+}
+renderRanking();
 
 const grid = document.getElementById('grid');
 characters.forEach(char => {
@@ -168,16 +145,24 @@ characters.forEach(char => {
       document.getElementById('status').innerText = "Escolha o Adversário (IA)";
     } else {
       p2Char = char;
-      aiSpeed = parseFloat(document.getElementById('aiLevel').value);
-      document.getElementById('selection-screen').style.display = 'none';
-      document.getElementById('game-container').style.display = 'flex';
-      startGame();
+      aiDifficulty = document.getElementById('aiLevel').value;
+      document.getElementById('selection-screen').classList.add('hidden');
+      document.getElementById('game-container').classList.remove('hidden');
+      initGame();
     }
   };
   grid.appendChild(card);
 });
 
-function startGame() {
+function goToMenu() {
+  step = 1; s1 = 0; s2 = 0;
+  document.getElementById('status').innerText = "Jogador 1: Escolha seu Personagem";
+  document.getElementById('gameover-screen').classList.add('hidden');
+  document.getElementById('selection-screen').classList.remove('hidden');
+  renderRanking();
+}
+
+function initGame() {
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
@@ -188,171 +173,179 @@ function startGame() {
 
   function bindTouch(id, key) {
     const el = document.getElementById(id);
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); input[key] = true; });
-    el.addEventListener('touchend', (e) => { e.preventDefault(); input[key] = false; });
-    el.addEventListener('mousedown', () => input[key] = true);
-    el.addEventListener('mouseup', () => input[key] = false);
+    const start = (e) => { e.preventDefault(); input[key] = true; };
+    const end = (e) => { e.preventDefault(); input[key] = false; };
+    el.addEventListener('touchstart', start); el.addEventListener('touchend', end);
+    el.addEventListener('mousedown', start); el.addEventListener('mouseup', end);
   }
 
   bindTouch('btn-left', 'L'); bindTouch('btn-right', 'R');
   bindTouch('btn-jump', 'JUMP'); bindTouch('btn-bump', 'BUMP'); bindTouch('btn-spike', 'SPIKE');
 
-  const groundY = 330;
-  let gameState = 'SERVING'; // SERVING, PLAYING
+  const groundY = 320;
+  let gameState = 'SERVING';
   let server = 'P1';
 
-  const p1 = { x: 150, y: groundY - 70, w: 40, h: 70, vx: 0, vy: 0, ground: true, state: 'IDLE', img: imgP1, name: p1Char.name };
-  const p2 = { x: 600, y: groundY - 70, w: 40, h: 70, vx: 0, vy: 0, ground: true, state: 'IDLE', img: imgP2, name: p2Char.name };
-  const ball = { x: 150, y: 200, r: 12, vx: 0, vy: 0 };
-  let s1 = 0, s2 = 0;
+  // Personagens maiores: w: 80, h: 130
+  const p1 = { x: 100, y: groundY - 130, w: 80, h: 130, vx: 0, vy: 0, ground: true, rot: 0, img: imgP1, name: p1Char.name };
+  const p2 = { x: 620, y: groundY - 130, w: 80, h: 130, vx: 0, vy: 0, ground: true, rot: 0, img: imgP2, name: p2Char.name };
+  const ball = { x: 150, y: 180, r: 14, vx: 0, vy: 0, angle: 0 };
 
-  function drawPlayer(p, isP2) {
-    ctx.save();
-    ctx.translate(p.x + p.w / 2, p.y + p.h);
+  window.restartMatch = () => {
+    s1 = 0; s2 = 0; server = 'P1'; gameState = 'SERVING';
+    document.getElementById('gameover-screen').classList.add('hidden');
+  };
 
-    // Corpo / Uniforme
-    ctx.fillStyle = isP2 ? '#ef4444' : '#0284c7';
-    ctx.fillRect(-12, -45, 24, 30); // Tronco
+  function updateAI() {
+    let speed = aiDifficulty === 'easy' ? 3.2 : aiDifficulty === 'medium' ? 5.2 : 7.0;
+    let targetX = 600;
 
-    // Pernas
-    ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 6; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-6, -15); ctx.lineTo(-8, 0); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(6, -15); ctx.lineTo(8, 0); ctx.stroke();
-
-    // Braços e Animação Corporal
-    ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 5;
-    if (p.state === 'BUMP') { // Manchete
-      ctx.beginPath();
-      ctx.moveTo(0, -35);
-      ctx.lineTo(isP2 ? -22 : 22, -25);
-      ctx.stroke();
-    } else if (p.state === 'SPIKE') { // Corte
-      ctx.beginPath();
-      ctx.moveTo(0, -35);
-      ctx.lineTo(isP2 ? -15 : 15, -60);
-      ctx.stroke();
-    } else { // Postura Padrão
-      ctx.beginPath();
-      ctx.moveTo(0, -35);
-      ctx.lineTo(isP2 ? -15 : 15, -20);
-      ctx.stroke();
+    if (gameState === 'PLAYING' && ball.x > 320) {
+      targetX = ball.x - p2.w / 2;
     }
 
-    // Foto da Cabeça
-    if (p.img.complete) {
-      ctx.drawImage(p.img, -22, -80, 44, 44);
-    }
+    if (p2.x < targetX - 5) p2.vx = speed;
+    else if (p2.x > targetX + 5) p2.vx = -speed;
+    else p2.vx = 0;
 
-    ctx.restore();
-  }
-
-  function loop() {
-    // Definir Estado do Jogador
-    p1.state = input.SPIKE ? 'SPIKE' : input.BUMP ? 'BUMP' : 'IDLE';
-
-    // Movimento P1
-    p1.vx = input.L ? -5 : input.R ? 5 : 0;
-    if (input.JUMP && p1.ground) {
-      if (gameState === 'SERVING' && server === 'P1') {
-        gameState = 'PLAYING';
-        ball.vx = 4.5;
-        ball.vy = -7;
-      } else {
-        p1.vy = -11;
-        p1.ground = false;
+    if (gameState === 'PLAYING' && ball.x > 420 && ball.y < 230 && p2.ground) {
+      if (Math.abs((p2.x + p2.w / 2) - ball.x) < 50) {
+        p2.vy = -12;
+        p2.ground = false;
       }
     }
 
-    // Movimento IA P2
-    let targetX = (gameState === 'SERVING' && server === 'P2') ? 600 : ball.x;
-    let dist = targetX - (p2.x + p2.w / 2);
-    if (Math.abs(dist) > 15) p2.vx = Math.sign(dist) * (5 * (aiSpeed * 10));
-    else p2.vx = 0;
-
-    // Saque da IA
     if (gameState === 'SERVING' && server === 'P2') {
       setTimeout(() => {
         if (gameState === 'SERVING' && server === 'P2') {
           gameState = 'PLAYING';
-          ball.vx = -4.5;
-          ball.vy = -7;
+          ball.vx = -5.8; ball.vy = -8;
         }
-      }, 1000);
+      }, 800);
+    }
+  }
+
+  function loop() {
+    p1.vx = input.L ? -6 : input.R ? 6 : 0;
+    if (input.JUMP && p1.ground) {
+      if (gameState === 'SERVING' && server === 'P1') {
+        gameState = 'PLAYING'; ball.vx = 5.8; ball.vy = -8;
+      } else {
+        p1.vy = -12; p1.ground = false;
+      }
     }
 
-    // Corte da IA se a bola estiver alta
-    p2.state = (ball.x > 400 && ball.y < 220 && Math.abs(dist) < 30) ? 'SPIKE' : 'IDLE';
-    if (ball.x > 500 && ball.y < 180 && p2.ground && gameState === 'PLAYING') {
-      p2.vy = -11; p2.ground = false;
-    }
+    p1.rot = input.SPIKE ? 0.3 : input.BUMP ? -0.2 : 0;
+    p2.rot = (ball.x > 400 && ball.y < 200) ? -0.3 : 0;
 
-    // Atualizar Posições e Física
+    updateAI();
+
     [p1, p2].forEach((p, i) => {
-      p.x += p.vx; p.vy += 0.48; p.y += p.vy;
+      p.x += p.vx; p.vy += 0.52; p.y += p.vy;
       if (p.y >= groundY - p.h) { p.y = groundY - p.h; p.vy = 0; p.ground = true; }
-      p.x = Math.max(i === 0 ? 10 : 410, Math.min(i === 0 ? 340 : 750, p.x));
+      p.x = Math.max(i === 0 ? 10 : 410, Math.min(i === 0 ? 310 : 710, p.x));
     });
 
-    // Lógica da Bola
     if (gameState === 'SERVING') {
-      ball.x = server === 'P1' ? p1.x + 30 : p2.x + 10;
-      ball.y = server === 'P1' ? p1.y : p2.y;
-      ball.vx = 0; ball.vy = 0;
+      ball.x = server === 'P1' ? p1.x + p1.w - 10 : p2.x + 10;
+      ball.y = server === 'P1' ? p1.y + 20 : p2.y + 20;
     } else {
-      ball.vy += 0.22; ball.x += ball.vx; ball.y += ball.vy;
+      ball.vy += 0.25; ball.x += ball.vx; ball.y += ball.vy;
+      ball.angle += ball.vx * 0.05;
 
       if (ball.x <= ball.r || ball.x >= 800 - ball.r) ball.vx *= -0.8;
 
-      // Colisão Rede
-      if (ball.x + ball.r > 392 && ball.x - ball.r < 408 && ball.y + ball.r > 210) {
-        ball.vx *= -0.8;
-        ball.x = ball.x < 400 ? 392 - ball.r : 408 + ball.r;
+      if (ball.x + ball.r > 392 && ball.x - ball.r < 408 && ball.y + ball.r > 180) {
+        ball.vx *= -0.8; ball.x = ball.x < 400 ? 392 - ball.r : 408 + ball.r;
       }
 
-      // Pontuação (Tocou no chão)
       if (ball.y >= groundY - ball.r) {
-        if (ball.x < 400) { s2++; server = 'P2'; } 
-        else { s1++; server = 'P1'; }
-        gameState = 'SERVING';
+        if (ball.x < 400) { s2++; server = 'P2'; } else { s1++; server = 'P1'; }
+        
+        if ((s1 >= MAX_POINTS || s2 >= MAX_POINTS) && Math.abs(s1 - s2) >= 2) {
+          let winner = s1 > s2 ? p1.name : p2.name;
+          if (s1 > s2) saveWin(p1.name); // Salva vitória no ranking se P1 vencer
+          document.getElementById('winner-text').innerText = `${winner} Venceu!`;
+          document.getElementById('final-score').innerText = `Placar Final: ${s1} x ${s2}`;
+          document.getElementById('gameover-screen').classList.remove('hidden');
+        } else {
+          gameState = 'SERVING';
+        }
       }
 
-      // Interação Bola com Jogadores
       [p1, p2].forEach(p => {
-        if (ball.x > p.x - 10 && ball.x < p.x + p.w + 10 && ball.y + ball.r > p.y && ball.y - ball.r < p.y + p.h) {
-          if (p.state === 'SPIKE') {
-            ball.vy = 7; // Cortada para baixo com força
-            ball.vx = p === p1 ? 7 : -7;
-          } else if (p.state === 'BUMP') {
-            ball.vy = -10; // Manchete/Levantamento para o alto
-            ball.vx = (ball.x - (p.x + p.w / 2)) * 0.2;
+        if (ball.x > p.x - 5 && ball.x < p.x + p.w + 5 && ball.y + ball.r > p.y && ball.y - ball.r < p.y + p.h) {
+          let dir = p === p1 ? 1 : -1;
+          if (input.SPIKE && p === p1) {
+            ball.vy = 8.5; ball.vx = 7.5 * dir;
+          } else if (input.BUMP && p === p1) {
+            ball.vy = -11; ball.vx = 3.5 * dir;
           } else {
-            ball.vy = -7;
-            ball.vx = (ball.x - (p.x + p.w / 2)) * 0.3;
+            ball.vy = -9.5; ball.vx = (4.5 + Math.random() * 2) * dir;
           }
         }
       });
     }
 
-    // --- DESENHO ---
+    // RENDERIZAÇÃO MELHORADA
     ctx.clearRect(0, 0, 800, 400);
 
-    // Cenário e Quadra
-    ctx.fillStyle = '#fde047'; ctx.fillRect(0, groundY, 800, 400 - groundY); // Areia
-    ctx.fillStyle = '#0284c7'; ctx.fillRect(0, groundY - 10, 800, 10); // Linha
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(395, 210, 10, groundY - 210); // Rede
+    // Céu
+    let skyGrad = ctx.createLinearGradient(0, 0, 0, 200);
+    skyGrad.addColorStop(0, '#00b4d8'); skyGrad.addColorStop(1, '#90e0ef');
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, 800, 200);
 
-    // Jogadores
-    drawPlayer(p1, false);
-    drawPlayer(p2, true);
+    // Mar
+    ctx.fillStyle = '#0077b6'; ctx.fillRect(0, 200, 800, 30);
 
-    // Bola de Vôlei
-    ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-    ctx.fillStyle = '#facc15'; ctx.fill(); ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 2; ctx.stroke();
+    // Areia detalhada
+    let sandGrad = ctx.createLinearGradient(0, 230, 0, 400);
+    sandGrad.addColorStop(0, '#fde047'); sandGrad.addColorStop(1, '#ca8a04');
+    ctx.fillStyle = sandGrad; ctx.fillRect(0, 230, 800, 170);
 
-    // Placar
-    ctx.fillStyle = '#0f172a'; ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(`${p1.name}: ${s1}`, 30, 40);
-    ctx.fillText(`${p2.name}: ${s2}`, 650, 40);
+    // Sombras Dinâmicas
+    [p1, p2, ball].forEach(obj => {
+      let sw = obj.w ? obj.w : obj.r * 2;
+      let factor = Math.max(0.2, 1 - (groundY - (obj.y + (obj.h || obj.r))) / 160);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.beginPath();
+      ctx.ellipse(obj.x + (obj.w ? obj.w / 2 : 0), groundY + 3, (sw / 2) * factor, 6 * factor, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Rede e Postes
+    ctx.fillStyle = '#475569'; ctx.fillRect(393, 170, 4, 150); ctx.fillRect(403, 170, 4, 150);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(395, 180, 10, 140);
+    ctx.fillStyle = '#dc2626'; ctx.fillRect(393, 180, 14, 8); // Borda
+
+    // Jogadores com Imagens Maiores
+    [p1, p2].forEach(p => {
+      ctx.save();
+      ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+      ctx.rotate(p.rot);
+      if (p.img.complete) {
+        ctx.drawImage(p.img, -p.w / 2, -p.h / 2, p.w, p.h);
+      } else {
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      }
+      ctx.restore();
+    });
+
+    // Bola Estilo Vôlei Tricolor
+    ctx.save();
+    ctx.translate(ball.x, ball.y);
+    ctx.rotate(ball.angle);
+    ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI * 2); ctx.fillStyle = '#facc15'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, ball.r, 0, Math.PI); ctx.fillStyle = '#0284c7'; ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+
+    // Placar Digital
+    ctx.fillStyle = 'rgba(11, 19, 43, 0.8)';
+    ctx.fillRect(20, 15, 180, 35); ctx.fillRect(600, 15, 180, 35);
+    ctx.fillStyle = '#48cae4'; ctx.font = 'bold 18px sans-serif';
+    ctx.fillText(`${p1.name}: ${s1}`, 30, 38);
+    ctx.fillText(`${p2.name}: ${s2}`, 610, 38);
 
     requestAnimationFrame(loop);
   }
