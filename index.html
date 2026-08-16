@@ -5,25 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Vôlei de Praia Pro</title>
   <style>
-    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-    body {
-      margin: 0; padding: 0; background: #0b132b; color: white;
-      font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; height: 100vh; overflow: hidden;
-    }
-
+    * { box-sizing: border-box; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+    body { margin: 0; padding: 0; background: #0b132b; color: white; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    
     .screen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: absolute; background: #1c2541; z-index: 10; padding: 20px; }
     .hidden { display: none !important; }
     
     .badge { background: #48cae4; color: #0b132b; padding: 10px 20px; border-radius: 20px; font-weight: 800; margin-bottom: 15px; font-size: 1.1rem; }
     .grid { display: grid; grid-template-columns: repeat(3, 100px); gap: 12px; margin-bottom: 15px; }
-    .card { background: #3a506b; border: 2px solid #5bc0be; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; }
+    .card { background: #3a506b; border: 2px solid #5bc0be; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; transition: transform 0.1s; }
     .card:active { transform: scale(0.95); }
     .card img { width: 70px; height: 85px; object-fit: contain; }
     .card span { display: block; margin-top: 6px; font-weight: bold; font-size: 0.85rem; }
-    
+
     .ranking-box { background: #0b132b; border: 1px solid #5bc0be; border-radius: 10px; padding: 10px; width: 300px; margin-top: 10px; }
-    .ranking-title { font-weight: bold; color: #48cae4; margin-bottom: 5px; text-align: center; font-size: 0.85rem; }
+    .ranking-title { font-weight: bold; color: #48cae4; margin-bottom: 5px; text-align: center; font-size: 0.85rem; text-transform: uppercase; }
     .ranking-list { list-style: none; padding: 0; margin: 0; max-height: 80px; overflow-y: auto; font-size: 0.8rem; }
     .ranking-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #1c2541; }
 
@@ -36,14 +32,14 @@
     #top-bar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; z-index: 5; }
     
     .controls { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1.2fr; gap: 8px; width: 100%; height: 40vh; background: #0b132b; padding: 10px; }
-    .btn { background: #1c2541; border: 2px solid #3a506b; border-radius: 10px; color: white; font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+    .btn { background: #1c2541; border: 2px solid #3a506b; border-radius: 10px; color: white; font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
     .btn-action { background: #0077b6; border-color: #00b4d8; }
     .btn-jump { grid-column: span 4; background: #38b000; border-color: #70e000; font-size: 1.2rem; }
   </style>
 </head>
 <body>
 
-  <!-- MENU INICIAL -->
+  <!-- MENU SELEÇÃO -->
   <div id="selection-screen" class="screen">
     <div class="badge" id="status">Jogador 1: Escolha seu Personagem</div>
     <div class="grid" id="grid"></div>
@@ -63,20 +59,20 @@
     </div>
   </div>
 
-  <!-- TELA DE FIM DE JOGO -->
+  <!-- TELA FIM DE JOGO -->
   <div id="gameover-screen" class="screen hidden">
     <h1 id="winner-text" style="color:#48cae4; font-size: 1.8rem;">Jogador Venceu!</h1>
     <p id="final-score" style="font-size: 1.1rem; margin-bottom: 15px;">Placar: 12 x 10</p>
     <div style="display:flex; gap: 10px;">
       <button id="btn-restart">Jogar Novamente</button>
-      <button id="btn-menu" style="background:#3a506b;">Menu Principal</button>
+      <button onclick="goToMenu()" style="background:#3a506b;">Menu Principal</button>
     </div>
   </div>
 
-  <!-- CONTAINER DO JOGO -->
+  <!-- CONTAINER JOGO -->
   <div id="game-container" class="hidden">
     <div id="top-bar">
-      <button id="btn-exit" style="padding: 5px 10px; font-size: 0.8rem; background:#3a506b;">Menu</button>
+      <button onclick="goToMenu()" style="padding: 6px 12px; background:#3a506b; color:white; border:none; border-radius:6px; font-weight:bold;">Menu</button>
     </div>
     
     <canvas id="gameCanvas" width="800" height="400"></canvas>
@@ -92,12 +88,12 @@
 
 <script>
 const characters = [
+  { name: 'Tato',  file: 'tato.png' },
   { name: 'Ramon', file: 'ramon.png' },
   { name: 'Kami',  file: 'kami.png' },
   { name: 'Ta',    file: 'ta.png' },
   { name: 'Manel', file: 'manel.png' },
-  { name: 'Mi',    file: 'mi.png' },
-  { name: 'Tato',  file: 'tato.png' }
+  { name: 'Mi',    file: 'mi.png' }
 ];
 
 let p1Char = null, p2Char = null, step = 1, aiDifficulty = 'medium';
@@ -106,9 +102,7 @@ const MAX_POINTS = 12;
 let animId = null;
 
 function getRanking() {
-  try {
-    return JSON.parse(localStorage.getItem('volei_ranking') || '{}');
-  } catch(e) { return {}; }
+  try { return JSON.parse(localStorage.getItem('volei_ranking') || '{}'); } catch(e) { return {}; }
 }
 
 function saveWin(playerName) {
@@ -164,9 +158,6 @@ function goToMenu() {
   renderRanking();
 }
 
-document.getElementById('btn-exit').onclick = goToMenu;
-document.getElementById('btn-menu').onclick = goToMenu;
-
 function initGame() {
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -193,31 +184,54 @@ function initGame() {
   let gameState = 'SERVING';
   let server = 'P1';
 
-  const p1 = { x: 100, y: groundY - 120, w: 75, h: 120, vx: 0, vy: 0, ground: true, rot: 0, img: imgP1, name: p1Char.name };
-  const p2 = { x: 620, y: groundY - 120, w: 75, h: 120, vx: 0, vy: 0, ground: true, rot: 0, img: imgP2, name: p2Char.name };
-  const ball = { x: 150, y: 180, r: 14, vx: 0, vy: 0, angle: 0 };
+  function createPlayer(x, img, name, isP1) {
+    return {
+      x, y: groundY - 110, w: 90, h: 110, vx: 0, vy: 0,
+      ground: true, img, name, isP1,
+      animState: 'RUN', frameIndex: 0, tick: 0
+    };
+  }
+
+  const p1 = createPlayer(100, imgP1, p1Char.name, true);
+  const p2 = createPlayer(620, imgP2, p2Char.name, false);
+  const ball = { x: 150, y: 200, r: 12, vx: 0, vy: 0, angle: 0 };
+
+  const ANIMS = {
+    RUN:   { row: 0, frames: 6, speed: 6 },
+    JUMP:  { row: 1, frames: 4, speed: 10 },
+    BUMP:  { row: 2, frames: 5, speed: 8 },
+    SPIKE: { row: 3, frames: 6, speed: 6 }
+  };
 
   document.getElementById('btn-restart').onclick = () => {
     s1 = 0; s2 = 0; server = 'P1'; gameState = 'SERVING';
     document.getElementById('gameover-screen').classList.add('hidden');
   };
 
+  function updateAnim(p) {
+    p.tick++;
+    const config = ANIMS[p.animState];
+    if (p.tick >= config.speed) {
+      p.tick = 0;
+      p.frameIndex = (p.frameIndex + 1) % config.frames;
+    }
+  }
+
   function updateAI() {
-    let speed = aiDifficulty === 'easy' ? 3.0 : aiDifficulty === 'medium' ? 5.0 : 6.8;
+    let speed = aiDifficulty === 'easy' ? 3.0 : aiDifficulty === 'medium' ? 4.8 : 6.5;
     let targetX = 600;
 
-    if (gameState === 'PLAYING' && ball.x > 320) {
+    if (gameState === 'PLAYING' && ball.x > 350) {
       targetX = ball.x - p2.w / 2;
     }
 
-    if (p2.x < targetX - 5) p2.vx = speed;
-    else if (p2.x > targetX + 5) p2.vx = -speed;
-    else p2.vx = 0;
+    if (p2.x < targetX - 5) { p2.vx = speed; p2.animState = 'RUN'; }
+    else if (p2.x > targetX + 5) { p2.vx = -speed; p2.animState = 'RUN'; }
+    else { p2.vx = 0; }
 
-    if (gameState === 'PLAYING' && ball.x > 400 && ball.y < 230 && p2.ground) {
-      if (Math.abs((p2.x + p2.w / 2) - ball.x) < 50) {
-        p2.vy = -12;
-        p2.ground = false;
+    if (gameState === 'PLAYING' && ball.x > 420 && ball.y < 220 && p2.ground) {
+      if (Math.abs((p2.x + p2.w / 2) - ball.x) < 40) {
+        p2.vy = -11; p2.ground = false; p2.animState = 'JUMP';
       }
     }
 
@@ -232,39 +246,62 @@ function initGame() {
   }
 
   function loop() {
-    p1.vx = input.L ? -5.8 : input.R ? 5.8 : 0;
+    // MOVIMENTAÇÃO P1
+    if (input.L) { p1.vx = -5.5; p1.animState = 'RUN'; }
+    else if (input.R) { p1.vx = 5.5; p1.animState = 'RUN'; }
+    else { p1.vx = 0; }
+
+    if (input.BUMP) p1.animState = 'BUMP';
+    else if (input.SPIKE) p1.animState = 'SPIKE';
+
     if (input.JUMP && p1.ground) {
       if (gameState === 'SERVING' && server === 'P1') {
-        gameState = 'PLAYING'; ball.vx = 5.8; ball.vy = -8;
+        gameState = 'PLAYING'; ball.vx = 5.8; ball.vy = -8.5;
       } else {
-        p1.vy = -12; p1.ground = false;
+        p1.vy = -11.5; p1.ground = false; p1.animState = 'JUMP';
       }
     }
 
-    p1.rot = input.SPIKE ? 0.3 : input.BUMP ? -0.2 : 0;
-    p2.rot = (ball.x > 400 && ball.y < 200) ? -0.3 : 0;
-
     updateAI();
 
+    // FÍSICA P1 & P2
     [p1, p2].forEach((p, i) => {
       p.x += p.vx; p.vy += 0.52; p.y += p.vy;
       if (p.y >= groundY - p.h) { p.y = groundY - p.h; p.vy = 0; p.ground = true; }
-      p.x = Math.max(i === 0 ? 10 : 410, Math.min(i === 0 ? 310 : 710, p.x));
+      p.x = Math.max(i === 0 ? 10 : 410, Math.min(i === 0 ? 310 : 700, p.x));
+      updateAnim(p);
     });
 
+    // FÍSICA BOLA
     if (gameState === 'SERVING') {
-      ball.x = server === 'P1' ? p1.x + p1.w - 10 : p2.x + 10;
-      ball.y = server === 'P1' ? p1.y + 20 : p2.y + 20;
+      ball.x = server === 'P1' ? p1.x + 60 : p2.x + 10;
+      ball.y = server === 'P1' ? p1.y + 30 : p2.y + 30;
     } else {
-      ball.vy += 0.25; ball.x += ball.vx; ball.y += ball.vy;
+      ball.vy += 0.26; ball.x += ball.vx; ball.y += ball.vy;
       ball.angle += ball.vx * 0.05;
 
       if (ball.x <= ball.r || ball.x >= 800 - ball.r) ball.vx *= -0.8;
 
+      // Colisão Rede
       if (ball.x + ball.r > 392 && ball.x - ball.r < 408 && ball.y + ball.r > 180) {
         ball.vx *= -0.8; ball.x = ball.x < 400 ? 392 - ball.r : 408 + ball.r;
       }
 
+      // Colisão Jogadores (Braços / Corpo)
+      [p1, p2].forEach(p => {
+        if (ball.x > p.x && ball.x < p.x + p.w && ball.y + ball.r > p.y + 15 && ball.y - ball.r < p.y + p.h) {
+          let dir = p.isP1 ? 1 : -1;
+          if (p.animState === 'SPIKE') {
+            ball.vy = 8.5; ball.vx = 7.5 * dir;
+          } else if (p.animState === 'BUMP') {
+            ball.vy = -10.5; ball.vx = 3.5 * dir;
+          } else {
+            ball.vy = -9.5; ball.vx = (4.5 + Math.random() * 2) * dir;
+          }
+        }
+      });
+
+      // Ponto
       if (ball.y >= groundY - ball.r) {
         if (ball.x < 400) { s2++; server = 'P2'; } else { s1++; server = 'P1'; }
         
@@ -278,33 +315,23 @@ function initGame() {
           gameState = 'SERVING';
         }
       }
-
-      [p1, p2].forEach(p => {
-        if (ball.x > p.x - 5 && ball.x < p.x + p.w + 5 && ball.y + ball.r > p.y && ball.y - ball.r < p.y + p.h) {
-          let dir = p === p1 ? 1 : -1;
-          if (input.SPIKE && p === p1) {
-            ball.vy = 8.5; ball.vx = 7.5 * dir;
-          } else if (input.BUMP && p === p1) {
-            ball.vy = -11; ball.vx = 3.5 * dir;
-          } else {
-            ball.vy = -9.5; ball.vx = (4.5 + Math.random() * 2) * dir;
-          }
-        }
-      });
     }
 
-    // DESENHO
+    // RENDERIZAÇÃO
     ctx.clearRect(0, 0, 800, 400);
 
-    let skyGrad = ctx.createLinearGradient(0, 0, 0, 200);
+    // Céu
+    let skyGrad = ctx.createLinearGradient(0, 0, 0, 220);
     skyGrad.addColorStop(0, '#00b4d8'); skyGrad.addColorStop(1, '#90e0ef');
-    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, 800, 200);
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, 800, 220);
 
-    ctx.fillStyle = '#0077b6'; ctx.fillRect(0, 200, 800, 30);
+    // Mar
+    ctx.fillStyle = '#0077b6'; ctx.fillRect(0, 200, 800, 20);
 
-    let sandGrad = ctx.createLinearGradient(0, 230, 0, 400);
+    // Areia
+    let sandGrad = ctx.createLinearGradient(0, 220, 0, 400);
     sandGrad.addColorStop(0, '#fde047'); sandGrad.addColorStop(1, '#ca8a04');
-    ctx.fillStyle = sandGrad; ctx.fillRect(0, 230, 800, 170);
+    ctx.fillStyle = sandGrad; ctx.fillRect(0, 220, 800, 180);
 
     // Sombras
     [p1, p2, ball].forEach(obj => {
@@ -312,7 +339,7 @@ function initGame() {
       let factor = Math.max(0.2, 1 - (groundY - (obj.y + (obj.h || obj.r))) / 160);
       ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
       ctx.beginPath();
-      ctx.ellipse(obj.x + (obj.w ? obj.w / 2 : 0), groundY + 3, (sw / 2) * factor, 6 * factor, 0, 0, Math.PI * 2);
+      ctx.ellipse(obj.x + (obj.w ? obj.w / 2 : 0), groundY + 3, (sw / 2) * factor, 5 * factor, 0, 0, Math.PI * 2);
       ctx.fill();
     });
 
@@ -321,19 +348,31 @@ function initGame() {
     ctx.fillStyle = '#ffffff'; ctx.fillRect(395, 180, 10, 140);
     ctx.fillStyle = '#dc2626'; ctx.fillRect(393, 180, 14, 8);
 
-    // Personagens
+    // Jogadores com Sprite Sheet
     [p1, p2].forEach(p => {
       ctx.save();
-      ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
-      ctx.rotate(p.rot);
-      if (p.img.complete && p.img.naturalWidth !== 0) {
-        ctx.drawImage(p.img, -p.w / 2, -p.h / 2, p.w, p.h);
+      if (!p.isP1) {
+        ctx.translate(p.x + p.w, p.y);
+        ctx.scale(-1, 1);
       } else {
-        // Fallback se a imagem falhar
+        ctx.translate(p.x, p.y);
+      }
+
+      if (p.img.complete && p.img.naturalWidth !== 0) {
+        const cfg = ANIMS[p.animState];
+        const frameW = p.img.naturalWidth / 6;
+        const frameH = p.img.naturalHeight / 5;
+
+        ctx.drawImage(
+          p.img,
+          p.frameIndex * frameW, cfg.row * frameH, frameW, frameH,
+          0, 0, p.w, p.h
+        );
+      } else {
         ctx.fillStyle = p === p1 ? '#0077b6' : '#dc2626';
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.fillRect(0, 0, p.w, p.h);
         ctx.fillStyle = '#ffffff'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(p.name, 0, 0);
+        ctx.fillText(p.name, p.w/2, p.h/2);
       }
       ctx.restore();
     });
@@ -356,6 +395,7 @@ function initGame() {
 
     animId = requestAnimationFrame(loop);
   }
+
   loop();
 }
 </script>
