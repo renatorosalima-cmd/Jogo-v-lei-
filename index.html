@@ -2,200 +2,124 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Vôlei de Praia Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vôlei de Praia</title>
   <style>
-    * { 
-      box-sizing: border-box; 
-      touch-action: manipulation; 
-      user-select: none; 
-      -webkit-user-select: none; 
-    }
     body { 
       margin: 0; 
-      padding: 0; 
       background: #0b132b; 
       color: white; 
-      font-family: 'Segoe UI', system-ui, sans-serif; 
+      font-family: sans-serif; 
+      overflow: hidden; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
       justify-content: center; 
       height: 100vh; 
-      overflow: hidden; 
     }
-    
-    /* TELAS E SELEÇÃO */
+    canvas { 
+      background: #87CEEB; 
+      border: 5px solid #fff; 
+      box-shadow: 0 0 20px rgba(0,0,0,0.5); 
+    }
     .screen { 
+      position: absolute; 
+      width: 100%; 
+      height: 100%; 
+      background: #1c2541; 
       display: flex; 
       flex-direction: column; 
       align-items: center; 
       justify-content: center; 
-      width: 100%; 
-      height: 100%; 
-      position: absolute; 
-      background: #1c2541; 
       z-index: 10; 
-      padding: 20px; 
     }
-    .hidden { display: none !important; }
-    
-    .badge { 
-      background: #48cae4; 
-      color: #0b132b; 
-      padding: 10px 20px; 
-      border-radius: 20px; 
-      font-weight: 800; 
-      margin-bottom: 20px; 
-      font-size: 1.1rem; 
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+    .hidden { display: none; }
     .grid { 
       display: grid; 
-      grid-template-columns: repeat(3, 100px); 
+      grid-template-columns: repeat(3, 110px); 
       gap: 15px; 
-      margin-bottom: 15px; 
+      margin-top: 20px; 
     }
     .card { 
       background: #3a506b; 
-      border: 2px solid #5bc0be; 
-      border-radius: 12px; 
       padding: 10px; 
+      border-radius: 10px; 
       text-align: center; 
       cursor: pointer; 
-      transition: transform 0.1s ease;
+      transition: 0.2s; 
+      font-weight: bold; 
+      border: 2px solid transparent; 
     }
-    .card:active { transform: scale(0.95); }
+    .card:hover { 
+      background: #5bc0be; 
+      color: #0b132b; 
+      border-color: #fff; 
+    }
     .card img { 
-      width: 70px; 
-      height: 85px; 
+      width: 80px; 
+      height: 80px; 
       object-fit: contain; 
-      border-radius: 6px;
-    }
-    .card span { 
       display: block; 
-      margin-top: 6px; 
-      font-weight: bold; 
-      font-size: 0.85rem; 
+      margin: 0 auto 5px auto; 
     }
-
-    /* AREA DO JOGO */
-    #game-container { 
-      display: flex; 
-      flex-direction: column; 
-      width: 100%; 
-      height: 100%; 
-      justify-content: space-between; 
-      position: relative; 
-    }
-    canvas { 
-      width: 100%; 
-      height: 60vh; 
-      display: block; 
-    }
-    
-    #top-bar { 
-      position: absolute; 
-      top: 10px; 
-      left: 10px; 
-      right: 10px; 
-      display: flex; 
-      justify-content: space-between; 
-      z-index: 5; 
-    }
-    
-    /* CONTROLES MOBILE */
-    .controls { 
-      display: grid; 
-      grid-template-columns: repeat(4, 1fr); 
-      grid-template-rows: 1fr 1.2fr; 
-      gap: 8px; 
-      width: 100%; 
-      height: 40vh; 
-      background: #0b132b; 
-      padding: 10px; 
-    }
-    .btn { 
-      background: #1c2541; 
-      border: 2px solid #3a506b; 
-      border-radius: 10px; 
+    .btn-exit { 
+      margin-top: 15px; 
+      padding: 10px 20px; 
+      background: #e63946; 
       color: white; 
-      font-size: 1rem; 
+      border: none; 
+      border-radius: 5px; 
       font-weight: bold; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
+      cursor: pointer; 
     }
-    .btn:active { background: #3a506b; }
-    .btn-action { background: #0077b6; border-color: #00b4d8; }
-    .btn-action:active { background: #00b4d8; }
-    .btn-jump { 
-      grid-column: span 4; 
-      background: #38b000; 
-      border-color: #70e000; 
-      font-size: 1.2rem; 
-    }
-    .btn-jump:active { background: #70e000; }
   </style>
 </head>
 <body>
 
-  <!-- TELA DE SELEÇÃO -->
-  <div id="selection-screen" class="screen">
-    <div class="badge" id="status">Jogador 1: Escolha seu Personagem</div>
-    <div class="grid" id="grid"></div>
-  </div>
+<!-- Tela de Seleção -->
+<div id="selection-screen" class="screen">
+  <h2 id="msg">Escolha seu Personagem</h2>
+  <div id="grid" class="grid"></div>
+</div>
 
-  <!-- CONTAINER DO JOGO -->
-  <div id="game-container" class="hidden">
-    <div id="top-bar">
-      <button onclick="location.reload()" style="padding: 8px 16px; background:#3a506b; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Menu</button>
-    </div>
-    
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-    
-    <div class="controls">
-      <div class="btn" id="btn-left">← ESQ</div>
-      <div class="btn" id="btn-right">DIR →</div>
-      <div class="btn btn-action" id="btn-bump">MANCHETE</div>
-      <div class="btn btn-action" id="btn-spike">CORTE</div>
-      <div class="btn btn-jump" id="btn-jump">PULAR / SACAR</div>
-    </div>
+<!-- Tela do Jogo -->
+<div id="game-container" class="hidden">
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <div style="text-align: center;">
+    <button class="btn-exit" onclick="location.reload()">Sair do Jogo</button>
   </div>
+</div>
 
 <script>
-// Lista de Personagens com mapeamento de imagens separadas para Menu e Animações
+// Mapeamento dos personagens com base no padrão dos arquivos
 const characters = [
-  { name: 'Tato',  avatar: 'tato_avatar.png',  sheet: 'tato_sheet.png',  cols: 6, rows: 5 },
-  { name: 'Ramon', avatar: 'ramon_avatar.png', sheet: 'ramon_sheet.png', cols: 6, rows: 5 },
-  { name: 'Kami',  avatar: 'kami_avatar.png',  sheet: 'kami_sheet.png',  cols: 6, rows: 5 },
-  { name: 'Ta',    avatar: 'ta_avatar.png',    sheet: 'ta_sheet.png',    cols: 6, rows: 5 },
-  { name: 'Manel', avatar: 'manel_avatar.png', sheet: 'manel_sheet.png', cols: 6, rows: 5 },
-  { name: 'Mi',    avatar: 'mi_avatar.png',    sheet: 'mi_sheet.png',    cols: 6, rows: 5 }
+  { name: 'Ramon', avatar: 'ramon_avatar.png', sheet: 'ramon_sheel.png', cols: 10, rows: 2 },
+  { name: 'Tato',  avatar: 'tato_avatar.png',  sheet: 'tato_sheel.png',  cols: 10, rows: 2 },
+  { name: 'Kami',  avatar: 'kami_avatar.png',  sheet: 'kami_sheel.png',  cols: 10, rows: 2 },
+  { name: 'Manel', avatar: 'manel_avatar.png', sheet: 'manel_sheel.png', cols: 10, rows: 2 },
+  { name: 'Mi',    avatar: 'mi_avatar.png',    sheet: 'mi_sheel.png',    cols: 10, rows: 2 },
+  { name: 'Ta',    avatar: 'ta_avatar.png',    sheet: 'ta_sheel.png',    cols: 10, rows: 2 }
 ];
 
-let p1Char = null, p2Char = null, step = 1;
+let p1Char, p2Char, step = 1;
 
-// Gerar grade de seleção de personagens
+// Gerar os cards na tela de seleção com os avatares
 const grid = document.getElementById('grid');
 characters.forEach(char => {
   const card = document.createElement('div');
   card.className = 'card';
-  card.innerHTML = `
-    <img src="${char.avatar}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'70\' height=\'85\'><rect width=\'100%\' height=\'100%\' fill=\'%2300b4d8\'/><text x=\'50%\' y=\'50%\' fill=\'white\' font-size=\'20\' font-weight=\'bold\' dominant-baseline=\'middle\' text-anchor=\'middle\'>${char.name[0]}</text></svg>'">
-    <span>${char.name}</span>
-  `;
+  card.innerHTML = `<img src="${char.avatar}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\'><rect width=\'100%\' height=\'100%\' fill=\'%23555\'/></svg>'"><span>${char.name}</span>`;
+  
   card.onclick = () => {
-    if (step === 1) {
-      p1Char = char;
-      step = 2;
-      document.getElementById('status').innerText = "Jogador 2: Escolha o Adversário";
-    } else {
-      p2Char = char;
-      document.getElementById('selection-screen').classList.add('hidden');
-      document.getElementById('game-container').classList.remove('hidden');
-      initGame();
+    if (step === 1) { 
+      p1Char = char; 
+      step = 2; 
+      document.getElementById('msg').innerText = "Escolha o Adversário"; 
+    } else { 
+      p2Char = char; 
+      document.getElementById('selection-screen').classList.add('hidden'); 
+      document.getElementById('game-container').classList.remove('hidden'); 
+      initGame(); 
     }
   };
   grid.appendChild(card);
@@ -204,212 +128,55 @@ characters.forEach(char => {
 function initGame() {
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
-
+  
   const imgP1 = new Image(); imgP1.src = p1Char.sheet;
   const imgP2 = new Image(); imgP2.src = p2Char.sheet;
 
-  const input = { L: false, R: false, JUMP: false, BUMP: false, SPIKE: false };
-
-  // Mapeamento de botões de toque/clique
-  function bindBtn(id, key) {
-    const el = document.getElementById(id);
-    const start = (e) => { e.preventDefault(); input[key] = true; };
-    const end = (e) => { e.preventDefault(); input[key] = false; };
-    el.addEventListener('touchstart', start, {passive: false});
-    el.addEventListener('touchend', end, {passive: false});
-    el.addEventListener('mousedown', start);
-    el.addEventListener('mouseup', end);
-  }
-
-  bindBtn('btn-left', 'L'); bindBtn('btn-right', 'R');
-  bindBtn('btn-jump', 'JUMP'); bindBtn('btn-bump', 'BUMP'); bindBtn('btn-spike', 'SPIKE');
-
-  // Suporte a teclado para testes no PC
-  window.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'a') input.L = true;
-    if (e.key === 'ArrowRight' || e.key === 'd') input.R = true;
-    if (e.key === ' ' || e.key === 'w') input.JUMP = true;
-    if (e.key === 'j') input.BUMP = true;
-    if (e.key === 'k') input.SPIKE = true;
-  });
-  window.addEventListener('keyup', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'a') input.L = false;
-    if (e.key === 'ArrowRight' || e.key === 'd') input.R = false;
-    if (e.key === ' ' || e.key === 'w') input.JUMP = false;
-    if (e.key === 'j') input.BUMP = false;
-    if (e.key === 'k') input.SPIKE = false;
-  });
-
-  const groundY = 320;
-  let gameState = 'SERVING';
-  let s1 = 0, s2 = 0;
-
-  function createPlayer(x, img, charData, isP1) {
-    return {
-      x, y: groundY - 120, w: 90, h: 120, vx: 0, vy: 0,
-      ground: true, img, data: charData, isP1,
-      animState: 'IDLE', frameIndex: 0, tick: 0
-    };
-  }
-
-  const p1 = createPlayer(100, imgP1, p1Char, true);
-  const p2 = createPlayer(620, imgP2, p2Char, false);
-  const ball = { x: 150, y: 200, r: 12, vx: 0, vy: 0 };
-
-  // Mapeamento das linhas do Sprite Sheet
-  const ANIMS = {
-    IDLE:  { row: 0, frames: 1, speed: 1 },
-    RUN:   { row: 0, frames: 6, speed: 6 },
-    JUMP:  { row: 1, frames: 4, speed: 10 },
-    BUMP:  { row: 2, frames: 5, speed: 8 },
-    SPIKE: { row: 3, frames: 6, speed: 6 }
-  };
-
-  function updateAnim(p) {
-    const config = ANIMS[p.animState];
-    if (config.frames === 1) {
-      p.frameIndex = 0;
-      return;
-    }
-    p.tick++;
-    if (p.tick >= config.speed) {
-      p.tick = 0;
-      p.frameIndex = (p.frameIndex + 1) % config.frames;
+  function drawFrame(img, charData, x, y, flip = false) {
+    if (img.complete && img.naturalWidth > 0) {
+      let frameW = img.naturalWidth / charData.cols;
+      let frameH = img.naturalHeight / charData.rows;
+      
+      ctx.save();
+      if (flip) {
+        ctx.translate(x + 100, y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, 0, 0, frameW, frameH, 0, 0, 100, 130);
+      } else {
+        ctx.drawImage(img, 0, 0, frameW, frameH, x, y, 100, 130);
+      }
+      ctx.restore();
     }
   }
 
   function loop() {
-    // CONTROLE E ESTADOS DO JOGADOR 1
-    if (input.L) { p1.vx = -5; p1.animState = 'RUN'; }
-    else if (input.R) { p1.vx = 5; p1.animState = 'RUN'; }
-    else { p1.vx = 0; if (p1.ground) p1.animState = 'IDLE'; }
-
-    if (input.BUMP) p1.animState = 'BUMP';
-    else if (input.SPIKE) p1.animState = 'SPIKE';
-
-    if (input.JUMP && p1.ground) {
-      if (gameState === 'SERVING') {
-        gameState = 'PLAYING'; 
-        ball.vx = 6; 
-        ball.vy = -9;
-      } else {
-        p1.vy = -12; 
-        p1.ground = false; 
-        p1.animState = 'JUMP';
-      }
-    }
-
-    // INTELIGÊNCIA ARTIFICIAL SIMPLES (P2)
-    if (gameState === 'PLAYING') {
-      if (ball.x > 400) {
-        if (ball.x < p2.x + 30) p2.vx = -3;
-        else if (ball.x > p2.x + 60) p2.vx = 3;
-        else p2.vx = 0;
-
-        if (ball.y < p2.y && Math.abs(ball.x - p2.x) < 40 && p2.ground) {
-          p2.vy = -11; p2.ground = false; p2.animState = 'JUMP';
-        }
-      } else {
-        p2.vx = 0;
-      }
-    }
-
-    // FÍSICA DOS JOGADORES
-    [p1, p2].forEach((p, i) => {
-      p.x += p.vx; 
-      p.vy += 0.55; 
-      p.y += p.vy;
-      
-      if (p.y >= groundY - p.h) { 
-        p.y = groundY - p.h; 
-        p.vy = 0; 
-        p.ground = true; 
-      }
-      
-      // Limites do campo (P1 na esquerda, P2 na direita)
-      p.x = Math.max(i === 0 ? 10 : 410, Math.min(i === 0 ? 310 : 700, p.x));
-      updateAnim(p);
-    });
-
-    // FÍSICA DA BOLA
-    if (gameState === 'SERVING') {
-      ball.x = p1.x + 60; 
-      ball.y = p1.y + 30;
-    } else {
-      ball.vy += 0.28; 
-      ball.x += ball.vx; 
-      ball.y += ball.vy;
-
-      // Colisão com a Rede
-      if (ball.x + ball.r > 393 && ball.x - ball.r < 407 && ball.y > 180) {
-        ball.vx *= -0.8; 
-        ball.x = ball.x < 400 ? 392 : 408;
-      }
-
-      // Colisão com os Jogadores
-      [p1, p2].forEach(p => {
-        if (ball.x > p.x && ball.x < p.x + p.w && ball.y + ball.r > p.y + 20 && ball.y - ball.r < p.y + p.h) {
-          let dir = p.isP1 ? 1 : -1;
-          ball.vy = p.animState === 'SPIKE' ? 8 : -10;
-          ball.vx = (p.animState === 'SPIKE' ? 7 : 4) * dir;
-        }
-      });
-
-      // Ponto (Bola tocou a areia)
-      if (ball.y >= groundY - ball.r) {
-        if (ball.x < 400) s2++; else s1++;
-        gameState = 'SERVING';
-      }
-    }
-
-    // RENDERIZAÇÃO NO CANVAS
     ctx.clearRect(0, 0, 800, 400);
-
-    // Céu, Areia e Rede
-    ctx.fillStyle = '#00b4d8'; ctx.fillRect(0, 0, 800, 220);
-    ctx.fillStyle = '#fde047'; ctx.fillRect(0, 220, 800, 180);
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(396, 180, 8, 140);
-
-    // Desenhar Jogadores
-    [p1, p2].forEach(p => {
-      ctx.save();
-      if (!p.isP1) {
-        ctx.translate(p.x + p.w, p.y);
-        ctx.scale(-1, 1);
-      } else {
-        ctx.translate(p.x, p.y);
-      }
-
-      const cfg = ANIMS[p.animState];
-      const frameW = p.img.naturalWidth / p.data.cols;
-      const frameH = p.img.naturalHeight / p.data.rows;
-
-      if (p.img.complete && p.img.naturalWidth > 0) {
-        ctx.drawImage(
-          p.img,
-          p.frameIndex * frameW, cfg.row * frameH, frameW, frameH,
-          0, 0, p.w, p.h
-        );
-      }
-      ctx.restore();
-    });
-
-    // Desenhar Bola
+    
+    // Fundo (Areia)
+    ctx.fillStyle = '#fde047'; 
+    ctx.fillRect(0, 220, 800, 180);
+    
+    // Rede
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
     ctx.beginPath(); 
-    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff'; 
-    ctx.fill(); 
-    ctx.strokeStyle = '#000000'; 
+    ctx.moveTo(400, 150); 
+    ctx.lineTo(400, 300); 
     ctx.stroke();
 
-    // Placar
-    ctx.fillStyle = '#0b132b'; 
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText(`${p1.name}: ${s1} | ${p2.name}: ${s2}`, 320, 40);
+    // Jogadores (P1 na esquerda, P2 virado na direita)
+    drawFrame(imgP1, p1Char, 150, 170, false);
+    drawFrame(imgP2, p2Char, 550, 170, true);
 
+    // Placar
+    ctx.fillStyle = '#0b132b';
+    ctx.font = 'bold 22px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${p1Char.name}  0  x  0  ${p2Char.name}`, 400, 40);
+    
     requestAnimationFrame(loop);
   }
-
+  
   loop();
 }
 </script>
