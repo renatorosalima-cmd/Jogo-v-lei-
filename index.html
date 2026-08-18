@@ -7,44 +7,113 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
     body { background: #111; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
-    #game-container { position: relative; width: 800px; height: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.90); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; padding: 20px; }
+    
+    /* Layout Responsivo para Celular */
+    #game-container { 
+      position: relative; 
+      width: 100%; 
+      max-width: 800px; 
+      height: 90vh; 
+      max-height: 600px; 
+      border-radius: 12px; 
+      overflow: hidden; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8); 
+      background: #222;
+    }
+
+    .screen { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.92); 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: space-between; 
+      align-items: center; 
+      z-index: 10; 
+      padding: 15px; 
+      overflow-y: auto;
+    }
+
     .hidden { display: none !important; }
-    h1 { font-size: 32px; color: #f1c40f; margin-bottom: 15px; text-shadow: 2px 2px #000; }
     
-    .player-select { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 15px; max-width: 750px; }
-    .player-card { background: #222; border: 2px solid #444; border-radius: 8px; padding: 8px; cursor: pointer; text-align: center; transition: all 0.2s; width: 110px; }
-    .player-card:hover, .player-card.selected { border-color: #f1c40f; transform: scale(1.04); background: #2c2c2c; }
-    .player-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #333; }
-    .player-card p { margin: 3px 0; font-weight: bold; font-size: 13px; color: #f1c40f; }
+    h1 { font-size: 24px; color: #f1c40f; margin-bottom: 10px; text-shadow: 2px 2px #000; text-align: center; }
+    h3 { font-size: 16px; margin-bottom: 8px; color: #ddd; }
     
-    .stats-list { font-size: 10px; text-align: left; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; line-height: 1.2; color: #ccc; }
+    /* Grid Adaptável de Jogadores */
+    .player-select { 
+      display: grid; 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 10px; 
+      width: 100%; 
+      max-width: 400px; 
+      max-height: 320px; 
+      overflow-y: auto; 
+      padding: 5px;
+    }
+
+    .player-card { 
+      background: #1e1e1e; 
+      border: 2px solid #444; 
+      border-radius: 8px; 
+      padding: 8px; 
+      cursor: pointer; 
+      text-align: center; 
+      transition: all 0.2s; 
+    }
+
+    .player-card:hover, .player-card.selected { border-color: #f1c40f; background: #2a2a2a; }
     
-    .difficulty-select { margin-bottom: 15px; }
-    select, button { padding: 10px 20px; font-size: 16px; border-radius: 5px; border: none; cursor: pointer; }
-    button { background: #e67e22; color: white; font-weight: bold; }
+    /* Correção da foto para focar no rosto sem cortar */
+    .avatar-wrapper {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto;
+      background: #333;
+      border: 2px solid #555;
+    }
+
+    .player-card img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: contain; 
+      object-position: top; 
+    }
+
+    .player-card p { margin: 4px 0 2px 0; font-weight: bold; font-size: 13px; color: #f1c40f; }
+    
+    .stats-list { font-size: 10px; text-align: center; background: rgba(0,0,0,0.5); padding: 3px; border-radius: 4px; color: #bbb; }
+    
+    .difficulty-select { margin: 10px 0; }
+    select, button { padding: 10px 20px; font-size: 15px; border-radius: 6px; border: none; cursor: pointer; }
+    button { background: #e67e22; color: white; font-weight: bold; width: 100%; max-width: 250px; }
     button:hover { background: #d35400; }
-    .btn-exit { background: #c0392b; margin-left: 10px; padding: 5px 12px; font-size: 13px; }
-    .btn-exit:hover { background: #a93226; }
+    
+    .btn-exit { background: #c0392b; margin-left: 8px; padding: 4px 10px; font-size: 12px; width: auto; }
     
     canvas { display: block; width: 100%; height: 100%; }
-    #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
-    .avatar-hud { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.7); padding: 5px 15px 5px 5px; border-radius: 30px; pointer-events: auto; }
-    .avatar-hud img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #f1c40f; object-fit: cover; }
-    .stats { background: rgba(0,0,0,0.7); padding: 8px 18px; border-radius: 20px; font-size: 16px; font-weight: bold; color: #f1c40f; }
-    #serve-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 14px 38px; font-size: 18px; background: #27ae60; box-shadow: 0 4px #1e8449; }
     
-    .ranking-table { width: 100%; max-width: 400px; margin-top: 15px; border-collapse: collapse; }
-    .ranking-table th, .ranking-table td { padding: 8px; text-align: center; border-bottom: 1px solid #444; }
+    #hud { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+    .avatar-hud { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.75); padding: 4px 12px 4px 4px; border-radius: 30px; pointer-events: auto; }
+    .avatar-hud .avatar-wrapper { width: 38px; height: 38px; border: 1px solid #f1c40f; }
+    .stats { background: rgba(0,0,0,0.75); padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #f1c40f; }
+    
+    #serve-btn { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); padding: 12px 35px; font-size: 18px; background: #27ae60; box-shadow: 0 4px #1e8449; width: auto; }
+    
+    .ranking-table { width: 100%; max-width: 350px; margin-top: 10px; border-collapse: collapse; }
+    .ranking-table th, .ranking-table td { padding: 6px; text-align: center; border-bottom: 1px solid #444; font-size: 14px; }
     .ranking-table th { color: #f1c40f; }
   </style>
 </head>
 <body>
 
   <div id="game-container">
-    <!-- Menu Principal -->
     <div id="menu-screen" class="screen">
-      <h1>Vôlei de Areia: Saque no Alvo</h1>
+      <h1>Vôlei de Areia<br>Saque no Alvo</h1>
       <h3>Escolha seu Jogador:</h3>
       <div class="player-select" id="player-container"></div>
 
@@ -60,10 +129,9 @@
       <button onclick="startGame()">INICIAR JOGO</button>
     </div>
 
-    <!-- Game Over / Ranking -->
     <div id="gameover-screen" class="screen hidden">
       <h1>Fim de Jogo!</h1>
-      <p id="final-score" style="font-size: 24px; margin-bottom: 10px;">Pontuação: 0</p>
+      <p id="final-score" style="font-size: 20px; margin-bottom: 5px;">Pontuação: 0</p>
       <h3>Ranking Online</h3>
       <table class="ranking-table">
         <thead>
@@ -71,19 +139,20 @@
         </thead>
         <tbody id="ranking-body"></tbody>
       </table>
-      <button onclick="showMenu()" style="margin-top: 20px;">MENU PRINCIPAL</button>
+      <button onclick="showMenu()" style="margin-top: 15px;">MENU PRINCIPAL</button>
     </div>
 
-    <!-- HUD -->
     <div id="hud" class="hidden">
       <div class="avatar-hud">
-        <img id="hud-avatar" src="" alt="Jogador">
+        <div class="avatar-wrapper">
+          <img id="hud-avatar" src="" alt="Jogador">
+        </div>
         <span id="hud-name">Jogador</span>
         <button class="btn-exit" onclick="quitGame()">Sair</button>
       </div>
       <div class="stats">
-        <span>Pontos: <span id="score">0</span></span> | 
-        <span>Tentativas: <span id="attempts">5</span></span>
+        <span>Pts: <span id="score">0</span></span> | 
+        <span>Tent: <span id="attempts">5</span></span>
       </div>
     </div>
 
@@ -92,13 +161,13 @@
   </div>
 
   <script>
-    // Jogadores com Atributos
+    // Atualizado: nomes dos arquivos com sufixo _avatar.png
     const players = [
       { name: 'Ramon', avatar: 'ramon_avatar.png', stats: { forca: 9, precisao: 7, reflexo: 7, agilidade: 4 } },
-      { name: 'Tato', avatar: 'tato.png', stats: { forca: 7, precisao: 9, reflexo: 6, agilidade: 6 } },
-      { name: 'Ta', avatar: 'ta.png', stats: { forca: 6, precisao: 8, reflexo: 8, agilidade: 7 } },
+      { name: 'Tato', avatar: 'tato_avatar.png', stats: { forca: 7, precisao: 9, reflexo: 6, agilidade: 6 } },
+      { name: 'Ta', avatar: 'ta_avatar.png', stats: { forca: 6, precisao: 8, reflexo: 8, agilidade: 7 } },
       { name: 'Mi', avatar: 'mi_avatar.png', stats: { forca: 5, precisao: 9, reflexo: 9, agilidade: 8 } },
-      { name: 'Manel', avatar: 'manel.png', stats: { forca: 8, precisao: 6, reflexo: 7, agilidade: 9 } },
+      { name: 'Manel', avatar: 'manel_avatar.png', stats: { forca: 8, precisao: 6, reflexo: 7, agilidade: 9 } },
       { name: 'Kami', avatar: 'kami_avatar.png', stats: { forca: 7, precisao: 8, reflexo: 9, agilidade: 6 } }
     ];
 
@@ -107,8 +176,6 @@
     let attempts = 5;
     let isGaming = false;
     let isServing = false;
-
-    // Efeito de Comemoração
     let celebrationText = '';
     let celebrationTimer = 0;
 
@@ -129,11 +196,13 @@
         card.className = `player-card ${index === 0 ? 'selected' : ''}`;
         card.onclick = () => selectPlayer(p, card);
         card.innerHTML = `
-          <img src="${p.avatar}" alt="${p.name}">
+          <div class="avatar-wrapper">
+            <img src="${p.avatar}" alt="${p.name}">
+          </div>
           <p>${p.name}</p>
           <div class="stats-list">
-            F: ${p.stats.forca} | P: ${p.stats.precisao}<br>
-            R: ${p.stats.reflexo} | A: ${p.stats.agilidade}
+            F:${p.stats.forca} P:${p.stats.precisao}<br>
+            R:${p.stats.reflexo} A:${p.stats.agilidade}
           </div>
         `;
         container.appendChild(card);
@@ -226,9 +295,7 @@
         if (ball.progress >= 1) checkHit();
       }
 
-      if (celebrationTimer > 0) {
-        celebrationTimer--;
-      }
+      if (celebrationTimer > 0) celebrationTimer--;
     }
 
     function checkHit() {
@@ -236,69 +303,32 @@
       if (dist < target.radius + ball.radius) {
         score += 10;
         document.getElementById('score').innerText = score;
-        
-        // Ativa Comemoração
         celebrationText = "PONTO PERFEITO! 🎉";
-        celebrationTimer = 40;
+        celebrationTimer = 180;
       }
       attempts--;
       document.getElementById('attempts').innerText = attempts;
-
       if (attempts <= 0) endGame();
       else resetBall();
     }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 1. CÉU DE PRAIA
       let skyGradient = ctx.createLinearGradient(0, 0, 0, 250);
       skyGradient.addColorStop(0, '#1a5276');
       skyGradient.addColorStop(0.5, '#2980b9');
       skyGradient.addColorStop(1, '#f39c12');
       ctx.fillStyle = skyGradient;
       ctx.fillRect(0, 0, canvas.width, 250);
-
-      // Sol Tropical
-      ctx.fillStyle = '#f1c40f';
-      ctx.beginPath();
-      ctx.arc(680, 70, 35, 0, Math.PI * 2);
-      ctx.fill();
-
-      // MAR
-      ctx.fillStyle = '#117864';
-      ctx.fillRect(0, 240, canvas.width, 30);
-
-      // 2. QUADRA DE AREIA
+      ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(680, 70, 35, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#117864'; ctx.fillRect(0, 240, canvas.width, 30);
       let sandGradient = ctx.createLinearGradient(0, 270, 0, 600);
       sandGradient.addColorStop(0, '#f5b041');
       sandGradient.addColorStop(1, '#d35400');
       ctx.fillStyle = sandGradient;
       ctx.fillRect(0, 270, canvas.width, 330);
-
-      // Textura/Sombra da Areia
-      ctx.fillStyle = 'rgba(0,0,0,0.05)';
-      ctx.fillRect(0, 320, canvas.width, 10);
-      ctx.fillRect(0, 420, canvas.width, 15);
-
-      // Linhas da Quadra
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(120, 320); ctx.lineTo(680, 320);
-      ctx.lineTo(760, 580); ctx.lineTo(40, 580);
-      ctx.closePath(); ctx.stroke();
-
-      // Coqueiros nas laterais
-      drawPalmTree(50, 240);
-      drawPalmTree(750, 240);
-
-      // Rede de Vôlei
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 260); ctx.lineTo(800, 260); ctx.stroke();
-
-      // 3. ALVO MELHORADO
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(120, 320); ctx.lineTo(680, 320); ctx.lineTo(760, 580); ctx.lineTo(40, 580); ctx.closePath(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 260); ctx.lineTo(800, 260); ctx.stroke();
       ctx.save();
       ctx.translate(target.x, target.y);
       ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(0, 0, target.radius, 0, Math.PI * 2); ctx.fill();
@@ -306,8 +336,6 @@
       ctx.fillStyle = '#2980b9'; ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.5, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.25, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
-
-      // 4. SETA DE MIRA
       if (!isServing) {
         ctx.save();
         ctx.translate(ball.startX, ball.startY);
@@ -317,34 +345,21 @@
         ctx.beginPath(); ctx.moveTo(-10, -80); ctx.lineTo(0, -100); ctx.lineTo(10, -80); ctx.closePath(); ctx.fill();
         ctx.restore();
       }
-
-      // 5. BONECO DE COSTAS
-      ctx.fillStyle = '#2c3e50';
-      ctx.beginPath(); ctx.ellipse(400, 570, 35, 20, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#d35400';
-      ctx.beginPath(); ctx.arc(400, 535, 18, 0, Math.PI * 2); ctx.fill();
-
-      // BOLA
-      ctx.fillStyle = '#f39c12';
-      ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2c3e50'; ctx.beginPath(); ctx.ellipse(400, 570, 35, 20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#d35400'; ctx.beginPath(); ctx.arc(400, 535, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f39c12'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2; ctx.stroke();
-
-      // 6. EFEITO DE COMEMORAÇÃO
       if (celebrationTimer > 0) {
-        ctx.font = 'bold 36px Segoe UI';
+        ctx.save();
+        ctx.font = 'bold 42px Segoe UI';
         ctx.fillStyle = '#f1c40f';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 4;
         ctx.textAlign = 'center';
-        ctx.fillText(celebrationText, 400, 200);
+        ctx.strokeText(celebrationText, 400, 180);
+        ctx.fillText(celebrationText, 400, 180);
+        ctx.restore();
       }
-    }
-
-    function drawPalmTree(x, y) {
-      ctx.fillStyle = '#7e5109';
-      ctx.fillRect(x - 5, y - 40, 10, 50);
-      ctx.fillStyle = '#27ae60';
-      ctx.beginPath(); ctx.arc(x - 15, y - 45, 15, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x + 15, y - 45, 15, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(x, y - 55, 15, 0, Math.PI * 2); ctx.fill();
     }
 
     function endGame() {
@@ -357,37 +372,22 @@
     }
 
     function updateOnlineRanking(playerName, playerScore) {
-      // Troca a chave de armazenamento para resetar dados antigos zerando o ranking
       let ranking = JSON.parse(localStorage.getItem('volei_ranking_v2')) || [];
-
-      if (playerScore > 0) {
-        // Se o jogador já existe no ranking, atualiza caso seja maior
-        const existingIndex = ranking.findIndex(r => r.name === playerName);
-        if (existingIndex !== -1) {
-          if (playerScore > ranking[existingIndex].score) {
-            ranking[existingIndex].score = playerScore;
-          }
-        } else {
-          ranking.push({ name: playerName, score: playerScore });
-        }
-
-        ranking.sort((a, b) => b.score - a.score);
-        ranking = ranking.slice(0, 5);
-        localStorage.setItem('volei_ranking_v2', JSON.stringify(ranking));
+      const existingIndex = ranking.findIndex(r => r.name === playerName);
+      if (existingIndex !== -1) {
+        if (playerScore > ranking[existingIndex].score) ranking[existingIndex].score = playerScore;
+      } else {
+        ranking.push({ name: playerName, score: playerScore });
       }
-
+      ranking.sort((a, b) => b.score - a.score);
+      ranking = ranking.slice(0, 5);
+      localStorage.setItem('volei_ranking_v2', JSON.stringify(ranking));
       const tbody = document.getElementById('ranking-body');
       tbody.innerHTML = '';
-
-      if (ranking.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3">Nenhuma pontuação registrada ainda.</td></tr>';
-      } else {
-        ranking.forEach((rank, index) => {
-          tbody.innerHTML += `<tr><td>${index + 1}º</td><td>${rank.name}</td><td>${rank.score} pts</td></tr>`;
-        });
-      }
+      ranking.forEach((rank, index) => {
+        tbody.innerHTML += `<tr><td>${index + 1}º</td><td>${rank.name}</td><td>${rank.score} pts</td></tr>`;
+      });
     }
-
     renderPlayerCards();
   </script>
 </body>
