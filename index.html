@@ -3,182 +3,297 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vôlei de Praia</title>
+  <title>Vôlei de Areia - Saque no Alvo</title>
   <style>
-    body { 
-      margin: 0; 
-      background: #0b132b; 
-      color: white; 
-      font-family: sans-serif; 
-      overflow: hidden; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      height: 100vh; 
-    }
-    canvas { 
-      background: #87CEEB; 
-      border: 5px solid #fff; 
-      box-shadow: 0 0 20px rgba(0,0,0,0.5); 
-    }
-    .screen { 
-      position: absolute; 
-      width: 100%; 
-      height: 100%; 
-      background: #1c2541; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      z-index: 10; 
-    }
-    .hidden { display: none; }
-    .grid { 
-      display: grid; 
-      grid-template-columns: repeat(3, 110px); 
-      gap: 15px; 
-      margin-top: 20px; 
-    }
-    .card { 
-      background: #3a506b; 
-      padding: 10px; 
-      border-radius: 10px; 
-      text-align: center; 
-      cursor: pointer; 
-      transition: 0.2s; 
-      font-weight: bold; 
-      border: 2px solid transparent; 
-    }
-    .card:hover { 
-      background: #5bc0be; 
-      color: #0b132b; 
-      border-color: #fff; 
-    }
-    .card img { 
-      width: 80px; 
-      height: 80px; 
-      object-fit: contain; 
-      display: block; 
-      margin: 0 auto 5px auto; 
-    }
-    .btn-exit { 
-      margin-top: 15px; 
-      padding: 10px 20px; 
-      background: #e63946; 
-      color: white; 
-      border: none; 
-      border-radius: 5px; 
-      font-weight: bold; 
-      cursor: pointer; 
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    body { background: #111; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+    #game-container { position: relative; width: 800px; height: 600px; background: linear-gradient(to bottom, #38ef7d, #11998e); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.88); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; padding: 20px; }
+    .hidden { display: none !important; }
+    h1 { font-size: 32px; color: #f1c40f; margin-bottom: 20px; text-shadow: 2px 2px #000; }
+    .player-select { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 20px; max-width: 600px; }
+    .player-card { background: #222; border: 3px solid transparent; border-radius: 8px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.2s; width: 90px; }
+    .player-card:hover, .player-card.selected { border-color: #f1c40f; transform: scale(1.05); }
+    .player-card img { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; background: #333; }
+    .player-card p { margin-top: 5px; font-weight: bold; font-size: 14px; }
+    .difficulty-select { margin-bottom: 20px; }
+    select, button { padding: 10px 20px; font-size: 16px; border-radius: 5px; border: none; cursor: pointer; }
+    button { background: #e67e22; color: white; font-weight: bold; }
+    button:hover { background: #d35400; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+    .avatar-hud { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.6); padding: 5px 15px 5px 5px; border-radius: 30px; }
+    .avatar-hud img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #f1c40f; object-fit: cover; }
+    .stats { background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; font-size: 18px; font-weight: bold; color: #f1c40f; }
+    #serve-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 15px 40px; font-size: 20px; background: #27ae60; box-shadow: 0 4px #1e8449; }
+    .ranking-table { width: 100%; max-width: 400px; margin-top: 15px; border-collapse: collapse; }
+    .ranking-table th, .ranking-table td { padding: 8px; text-align: center; border-bottom: 1px solid #444; }
+    .ranking-table th { color: #f1c40f; }
   </style>
 </head>
 <body>
 
-<!-- Tela de Seleção -->
-<div id="selection-screen" class="screen">
-  <h2 id="msg">Escolha seu Personagem</h2>
-  <div id="grid" class="grid"></div>
-</div>
+  <div id="game-container">
+    <!-- Menu -->
+    <div id="menu-screen" class="screen">
+      <h1>Vôlei de Areia: Saque no Alvo</h1>
+      <h3>Escolha seu Jogador:</h3>
+      <div class="player-select" id="player-container"></div>
 
-<!-- Tela do Jogo -->
-<div id="game-container" class="hidden">
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-  <div style="text-align: center;">
-    <button class="btn-exit" onclick="location.reload()">Sair do Jogo</button>
+      <div class="difficulty-select">
+        <label for="difficulty">Dificuldade: </label>
+        <select id="difficulty">
+          <option value="easy">Fácil (Alvo Lento)</option>
+          <option value="medium" selected>Médio (Alvo Normal)</option>
+          <option value="hard">Difícil (Alvo Rápido)</option>
+        </select>
+      </div>
+
+      <button onclick="startGame()">INICIAR JOGO</button>
+    </div>
+
+    <!-- Game Over -->
+    <div id="gameover-screen" class="screen hidden">
+      <h1>Fim de Jogo!</h1>
+      <p id="final-score" style="font-size: 24px; margin-bottom: 10px;">Pontuação: 0</p>
+      <h3>Ranking Online (Top 5)</h3>
+      <table class="ranking-table">
+        <thead>
+          <tr><th>#</th><th>Jogador</th><th>Pontos</th></tr>
+        </thead>
+        <tbody id="ranking-body"></tbody>
+      </table>
+      <button onclick="showMenu()" style="margin-top: 20px;">JOGAR NOVAMENTE</button>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud" class="hidden">
+      <div class="avatar-hud">
+        <img id="hud-avatar" src="" alt="Jogador">
+        <span id="hud-name">Jogador</span>
+      </div>
+      <div class="stats">
+        <span>Pontos: <span id="score">0</span></span> | 
+        <span>Tentativas: <span id="attempts">5</span></span>
+      </div>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <button id="serve-btn" class="hidden" onclick="serveBall()">SACAR!</button>
   </div>
-</div>
 
-<script>
-// Mapeamento dos personagens com base no padrão dos arquivos
-const characters = [
-  { name: 'Ramon', avatar: 'ramon_avatar.png', sheet: 'ramon_sheel.png', cols: 10, rows: 2 },
-  { name: 'Tato',  avatar: 'tato_avatar.png',  sheet: 'tato_sheel.png',  cols: 10, rows: 2 },
-  { name: 'Kami',  avatar: 'kami_avatar.png',  sheet: 'kami_sheel.png',  cols: 10, rows: 2 },
-  { name: 'Manel', avatar: 'manel_avatar.png', sheet: 'manel_sheel.png', cols: 10, rows: 2 },
-  { name: 'Mi',    avatar: 'mi_avatar.png',    sheet: 'mi_sheel.png',    cols: 10, rows: 2 },
-  { name: 'Ta',    avatar: 'ta_avatar.png',    sheet: 'ta_sheel.png',    cols: 10, rows: 2 }
-];
+  <script>
+    // Lista dos seus personagens
+    const players = [
+      { name: 'Ramon', avatar: 'ramon.png' },
+      { name: 'Tato', avatar: 'tato.png' },
+      { name: 'Ta', avatar: 'ta.png' },
+      { name: 'Mi', avatar: 'mi.png' },
+      { name: 'Manel', avatar: 'manel.png' },
+      { name: 'Kami', avatar: 'kami.png' }
+    ];
 
-let p1Char, p2Char, step = 1;
+    let selectedPlayer = players[0];
+    let score = 0;
+    let attempts = 5;
+    let isGaming = false;
+    let isServing = false;
 
-// Gerar os cards na tela de seleção com os avatares
-const grid = document.getElementById('grid');
-characters.forEach(char => {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `<img src="${char.avatar}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'80\' height=\'80\'><rect width=\'100%\' height=\'100%\' fill=\'%23555\'/></svg>'"><span>${char.name}</span>`;
-  
-  card.onclick = () => {
-    if (step === 1) { 
-      p1Char = char; 
-      step = 2; 
-      document.getElementById('msg').innerText = "Escolha o Adversário"; 
-    } else { 
-      p2Char = char; 
-      document.getElementById('selection-screen').classList.add('hidden'); 
-      document.getElementById('game-container').classList.remove('hidden'); 
-      initGame(); 
+    let target = { x: 100, y: 100, radius: 30, speed: 3, direction: 1 };
+    let ball = { x: 400, y: 520, startX: 400, startY: 520, radius: 12, targetX: 0, targetY: 0, progress: 0, speed: 0.03 };
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Carregar cards dos jogadores na tela inicial
+    function renderPlayerCards() {
+      const container = document.getElementById('player-container');
+      container.innerHTML = '';
+      players.forEach((p, index) => {
+        const card = document.createElement('div');
+        card.className = `player-card ${index === 0 ? 'selected' : ''}`;
+        card.onclick = () => selectPlayer(p, card);
+        card.innerHTML = `<img src="${p.avatar}" alt="${p.name}"><p>${p.name}</p>`;
+        container.appendChild(card);
+      });
     }
-  };
-  grid.appendChild(card);
-});
 
-function initGame() {
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  
-  const imgP1 = new Image(); imgP1.src = p1Char.sheet;
-  const imgP2 = new Image(); imgP2.src = p2Char.sheet;
+    function selectPlayer(player, cardElement) {
+      selectedPlayer = player;
+      document.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
+      cardElement.classList.add('selected');
+    }
 
-  function drawFrame(img, charData, x, y, flip = false) {
-    if (img.complete && img.naturalWidth > 0) {
-      let frameW = img.naturalWidth / charData.cols;
-      let frameH = img.naturalHeight / charData.rows;
-      
-      ctx.save();
-      if (flip) {
-        ctx.translate(x + 100, y);
-        ctx.scale(-1, 1);
-        ctx.drawImage(img, 0, 0, frameW, frameH, 0, 0, 100, 130);
-      } else {
-        ctx.drawImage(img, 0, 0, frameW, frameH, x, y, 100, 130);
+    function startGame() {
+      const difficulty = document.getElementById('difficulty').value;
+      if (difficulty === 'easy') target.speed = 2;
+      if (difficulty === 'medium') target.speed = 4.5;
+      if (difficulty === 'hard') target.speed = 7.5;
+
+      score = 0;
+      attempts = 5;
+      isGaming = true;
+
+      document.getElementById('hud-avatar').src = selectedPlayer.avatar;
+      document.getElementById('hud-name').innerText = selectedPlayer.name;
+      document.getElementById('score').innerText = score;
+      document.getElementById('attempts').innerText = attempts;
+
+      document.getElementById('menu-screen').classList.add('hidden');
+      document.getElementById('gameover-screen').classList.add('hidden');
+      document.getElementById('hud').classList.remove('hidden');
+      document.getElementById('serve-btn').classList.remove('hidden');
+
+      resetBall();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function showMenu() {
+      document.getElementById('gameover-screen').classList.add('hidden');
+      document.getElementById('menu-screen').classList.remove('hidden');
+    }
+
+    function resetBall() {
+      ball.x = 400;
+      ball.y = 520;
+      ball.progress = 0;
+      isServing = false;
+      document.getElementById('serve-btn').disabled = false;
+    }
+
+    function serveBall() {
+      if (isServing || attempts <= 0) return;
+      isServing = true;
+      document.getElementById('serve-btn').disabled = true;
+      ball.targetX = target.x;
+      ball.targetY = target.y;
+    }
+
+    function gameLoop() {
+      if (!isGaming) return;
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+      target.x += target.speed * target.direction;
+      if (target.x + target.radius > canvas.width - 20 || target.x - target.radius < 20) {
+        target.direction *= -1;
       }
-      ctx.restore();
+
+      if (isServing) {
+        ball.progress += ball.speed;
+        const currentX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
+        const currentY = ball.startY + (ball.targetY - ball.startY) * ball.progress;
+        const arc = Math.sin(ball.progress * Math.PI) * 120;
+        ball.x = currentX;
+        ball.y = currentY - arc;
+
+        if (ball.progress >= 1) checkHit();
+      }
     }
-  }
 
-  function loop() {
-    ctx.clearRect(0, 0, 800, 400);
-    
-    // Fundo (Areia)
-    ctx.fillStyle = '#fde047'; 
-    ctx.fillRect(0, 220, 800, 180);
-    
-    // Rede
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 3;
-    ctx.beginPath(); 
-    ctx.moveTo(400, 150); 
-    ctx.lineTo(400, 300); 
-    ctx.stroke();
+    function checkHit() {
+      const dist = Math.hypot(ball.x - target.x, ball.y - target.y);
+      if (dist < target.radius + ball.radius) {
+        score += 10;
+        document.getElementById('score').innerText = score;
+      }
+      attempts--;
+      document.getElementById('attempts').innerText = attempts;
 
-    // Jogadores (P1 na esquerda, P2 virado na direita)
-    drawFrame(imgP1, p1Char, 150, 170, false);
-    drawFrame(imgP2, p2Char, 550, 170, true);
+      if (attempts <= 0) endGame();
+      else resetBall();
+    }
 
-    // Placar
-    ctx.fillStyle = '#0b132b';
-    ctx.font = 'bold 22px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${p1Char.name}  0  x  0  ${p2Char.name}`, 400, 40);
-    
-    requestAnimationFrame(loop);
-  }
-  
-  loop();
-}
-</script>
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Céu
+      let skyGradient = ctx.createLinearGradient(0, 0, 0, 300);
+      skyGradient.addColorStop(0, '#3498db');
+      skyGradient.addColorStop(1, '#f39c12');
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, canvas.width, 350);
+
+      // Sol
+      ctx.fillStyle = '#f1c40f';
+      ctx.beginPath();
+      ctx.arc(700, 80, 40, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Areia
+      let sandGradient = ctx.createLinearGradient(0, 350, 0, 600);
+      sandGradient.addColorStop(0, '#e67e22');
+      sandGradient.addColorStop(1, '#f1c40f');
+      ctx.fillStyle = sandGradient;
+      ctx.fillRect(0, 350, canvas.width, 250);
+
+      // Linhas da Quadra
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(100, 400); ctx.lineTo(700, 400);
+      ctx.lineTo(750, 580); ctx.lineTo(50, 580);
+      ctx.closePath(); ctx.stroke();
+
+      // Rede
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(0, 300); ctx.lineTo(800, 300); ctx.stroke();
+
+      // Alvo Móvel
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#e74c3c';
+      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.6, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#e74c3c';
+      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.3, 0, Math.PI * 2); ctx.fill();
+
+      // Boneco (Costas)
+      ctx.fillStyle = '#2c3e50';
+      ctx.beginPath(); ctx.ellipse(400, 570, 35, 20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#d35400';
+      ctx.beginPath(); ctx.arc(400, 535, 18, 0, Math.PI * 2); ctx.fill();
+
+      // Bola
+      ctx.fillStyle = '#f39c12';
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    function endGame() {
+      isGaming = false;
+      document.getElementById('hud').classList.add('hidden');
+      document.getElementById('serve-btn').classList.add('hidden');
+      document.getElementById('gameover-screen').classList.remove('hidden');
+      document.getElementById('final-score').innerText = `Pontuação Final: ${score}`;
+      updateOnlineRanking(selectedPlayer.name, score);
+    }
+
+    function updateOnlineRanking(playerName, playerScore) {
+      let ranking = JSON.parse(localStorage.getItem('volei_ranking')) || [
+        { name: 'Ramon', score: 40 },
+        { name: 'Tato', score: 30 },
+        { name: 'Kami', score: 20 }
+      ];
+
+      ranking.push({ name: playerName, score: playerScore });
+      ranking.sort((a, b) => b.score - a.score);
+      ranking = ranking.slice(0, 5);
+      localStorage.setItem('volei_ranking', JSON.stringify(ranking));
+
+      const tbody = document.getElementById('ranking-body');
+      tbody.innerHTML = '';
+      ranking.forEach((rank, index) => {
+        tbody.innerHTML += `<tr><td>${index + 1}º</td><td>${rank.name}</td><td>${rank.score} pts</td></tr>`;
+      });
+    }
+
+    // Inicializa os cards ao carregar
+    renderPlayerCards();
+  </script>
 </body>
 </html>
