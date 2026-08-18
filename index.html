@@ -255,7 +255,7 @@
 
     let selectedPlayer = players[0];
     let score = 0, attempts = 5, isGaming = false, isServing = false, celebrationText = '', celebrationTimer = 0;
-    let target = { x: 100, y: 110, radius: 34, speed: 3, direction: 1 };
+    let target = { x: 100, y: 110, radius: 36, speed: 3, direction: 1 };
     let ball = { x: 400, y: 520, startX: 400, startY: 520, radius: 14, targetX: 0, targetY: 0, progress: 0, speed: 0.04 };
     let aimAngle = 0, aimSpeed = 0.03;
 
@@ -348,9 +348,14 @@
       playServeSound();
       isServing = true;
       document.getElementById('serve-btn').disabled = true;
-      const length = 450;
-      ball.targetX = ball.startX + Math.sin(aimAngle) * length;
-      ball.targetY = ball.startY - Math.cos(aimAngle) * length;
+
+      // Trajetória garantida até a linha de altura do alvo (Y = 110)
+      const targetY = target.y; 
+      const deltaY = ball.startY - targetY;
+      const deltaX = Math.tan(aimAngle) * deltaY;
+
+      ball.targetX = ball.startX + deltaX;
+      ball.targetY = targetY;
     }
 
     function gameLoop() {
@@ -360,7 +365,17 @@
     }
 
     function update() {
-      if (!isServing) { aimAngle += aimSpeed; if (aimAngle > 0.8 || aimAngle < -0.8) aimSpeed *= -1; }
+      if (!isServing) { 
+        aimAngle += aimSpeed; 
+        if (aimAngle > 0.85 || aimAngle < -0.85) aimSpeed *= -1; 
+      }
+
+      // Atualiza o alvo continuamente (mesmo durante o saque)
+      target.x += target.speed * target.direction;
+      if (target.x + target.radius > canvas.width - 20 || target.x - target.radius < 20) {
+        target.direction *= -1;
+      }
+
       if (isServing) {
         ball.progress += ball.speed;
         ball.x = ball.startX + (ball.targetX - ball.startX) * ball.progress;
@@ -368,14 +383,8 @@
         
         if (ball.progress >= 1) {
           checkHit();
-          return; // Para não atualizar a posição do alvo após a verificação de acerto
+          return;
         }
-      }
-
-      // Atualiza posição do alvo e rebate nas bordas
-      target.x += target.speed * target.direction;
-      if (target.x + target.radius > canvas.width - 30 || target.x - target.radius < 30) {
-        target.direction *= -1;
       }
 
       if (celebrationTimer > 0) celebrationTimer--;
@@ -384,12 +393,12 @@
     function checkHit() {
       if (attempts <= 0) return; 
 
-      const dist = Math.hypot(ball.x - target.x, ball.y - target.y);
-      // Margem de tolerância para acertos perfeitos nas extremidades
-      const tolerance = 6; 
+      // Verificação precisa baseada no alinhamento horizontal (X) no momento da chegada
+      const diffX = Math.abs(ball.x - target.x);
+      const hitRadius = target.radius + ball.radius; 
       let isHit = false;
 
-      if (dist <= target.radius + ball.radius + tolerance) {
+      if (diffX <= hitRadius) {
         score += 10;
         playHitSound();
         document.getElementById('score').innerText = score;
@@ -403,7 +412,7 @@
       document.getElementById('attempts').innerText = attempts;
 
       if (attempts <= 0) {
-        const delay = isHit ? 2500 : 800;
+        const delay = isHit ? 2200 : 800;
         setTimeout(() => endGame(), delay); 
       } else {
         resetBall();
@@ -413,7 +422,7 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // QUADRA ILUMINADA COM GRADIENTES
+      // QUADRA ILUMINADA
       let skyGrad = ctx.createLinearGradient(0, 0, 0, 260);
       skyGrad.addColorStop(0, '#0284c7');
       skyGrad.addColorStop(1, '#38bdf8');
@@ -424,7 +433,7 @@
       sandGrad.addColorStop(1, '#d97706');
       ctx.fillStyle = sandGrad; ctx.fillRect(0, 260, canvas.width, 340);
 
-      // Linhas da Quadra em Perspectiva
+      // Linhas da Quadra
       ctx.strokeStyle = '#ffffff'; 
       ctx.lineWidth = 5; 
       ctx.shadowColor = 'rgba(0,0,0,0.3)';
@@ -435,7 +444,7 @@
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Rede de Vôlei Detalhada
+      // Rede
       ctx.fillStyle = 'rgba(255,255,255,0.2)';
       ctx.fillRect(0, 250, canvas.width, 20);
       ctx.strokeStyle = '#ffffff';
@@ -443,11 +452,12 @@
       ctx.beginPath(); ctx.moveTo(0, 250); ctx.lineTo(canvas.width, 250); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0, 270); ctx.lineTo(canvas.width, 270); ctx.stroke();
 
-      // LINHA DE MIRA ANIMADA COM GRADIENTE
+      // LINHA DE MIRA ANIMADA
       if (!isServing) {
-        const length = 200;
-        const endX = ball.startX + Math.sin(aimAngle) * length;
-        const endY = ball.startY - Math.cos(aimAngle) * length;
+        const deltaY = ball.startY - target.y;
+        const deltaX = Math.tan(aimAngle) * deltaY;
+        const endX = ball.startX + deltaX;
+        const endY = target.y;
 
         ctx.save();
         let aimGrad = ctx.createLinearGradient(ball.startX, ball.startY, endX, endY);
@@ -472,24 +482,21 @@
         ctx.restore();
       }
 
-      // ALVO ESTILIZADO E BRILHANTE
+      // ALVO ESTILIZADO
       ctx.save();
       ctx.shadowColor = '#ef4444';
       ctx.shadowBlur = 20;
       
-      // Anel Externo Vermelho
       ctx.fillStyle = '#ef4444';
       ctx.beginPath();
       ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Anel Intermediário Branco
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(target.x, target.y, target.radius * 0.65, 0, Math.PI * 2);
       ctx.fill();
 
-      // Centro Dourado Brilhante
       ctx.fillStyle = '#f59e0b';
       ctx.shadowColor = '#f59e0b';
       ctx.shadowBlur = 10;
@@ -498,7 +505,7 @@
       ctx.fill();
       ctx.restore();
 
-      // BOLA DE VÔLEI COM SOMBRA PROJETADA
+      // BOLA DE VÔLEI
       ctx.save();
       const ballScale = 1 - (ball.progress * 0.3);
       ctx.fillStyle = 'rgba(0,0,0,0.25)';
@@ -518,7 +525,7 @@
       ctx.stroke();
       ctx.restore();
       
-      // TEXTO DE CELEBRAÇÃO
+      // CELEBRAÇÃO
       if (celebrationTimer > 0) {
         ctx.save();
         ctx.font = '900 36px Poppins, sans-serif'; 
