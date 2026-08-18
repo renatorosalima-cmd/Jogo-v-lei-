@@ -38,8 +38,8 @@
 
     .hidden { display: none !important; }
     
-    h1 { font-size: 24px; color: #f1c40f; margin-bottom: 10px; text-shadow: 2px 2px #000; text-align: center; }
-    h3 { font-size: 16px; margin-bottom: 8px; color: #ddd; }
+    h1 { font-size: 24px; color: #f1c40f; margin-bottom: 5px; text-shadow: 2px 2px #000; text-align: center; }
+    h3 { font-size: 14px; margin-bottom: 6px; color: #ddd; }
     
     .player-select { 
       display: grid; 
@@ -47,7 +47,7 @@
       gap: 10px; 
       width: 100%; 
       max-width: 400px; 
-      max-height: 320px; 
+      max-height: 300px; 
       overflow-y: auto; 
       padding: 5px;
     }
@@ -65,8 +65,8 @@
     .player-card:hover, .player-card.selected { border-color: #f1c40f; background: #2a2a2a; }
     
     .avatar-wrapper {
-      width: 60px;
-      height: 60px;
+      width: 55px;
+      height: 55px;
       border-radius: 50%;
       overflow: hidden;
       margin: 0 auto;
@@ -82,9 +82,18 @@
     .player-card p { margin: 4px 0 2px 0; font-weight: bold; font-size: 13px; color: #f1c40f; }
     .stats-list { font-size: 10px; text-align: center; background: rgba(0,0,0,0.5); padding: 3px; border-radius: 4px; color: #bbb; }
     
-    .difficulty-select { margin: 10px 0; }
-    select, button { padding: 10px 20px; font-size: 15px; border-radius: 6px; border: none; cursor: pointer; }
-    button { background: #e67e22; color: white; font-weight: bold; width: 100%; max-width: 250px; }
+    /* Menu Dificuldade Compacto */
+    .difficulty-select { 
+      margin: 5px 0; 
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    select { padding: 4px 8px; font-size: 12px; border-radius: 4px; border: 1px solid #555; background: #222; color: #fff; cursor: pointer; }
+    
+    button { padding: 10px 20px; font-size: 15px; border-radius: 6px; border: none; cursor: pointer; background: #e67e22; color: white; font-weight: bold; width: 100%; max-width: 250px; }
     button:hover { background: #d35400; }
     
     .btn-exit { background: #c0392b; margin-left: 8px; padding: 4px 10px; font-size: 12px; width: auto; }
@@ -98,13 +107,12 @@
     
     #serve-btn { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); padding: 12px 35px; font-size: 18px; background: #27ae60; box-shadow: 0 4px #1e8449; width: auto; }
     
-    /* Ranking Table com Avatar */
     .ranking-table { width: 100%; max-width: 400px; margin-top: 10px; border-collapse: collapse; }
-    .ranking-table th, .ranking-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #444; font-size: 14px; vertical-align: middle; }
+    .ranking-table th, .ranking-table td { padding: 6px; text-align: center; border-bottom: 1px solid #444; font-size: 13px; vertical-align: middle; }
     .ranking-table th { color: #f1c40f; }
     
-    .ranking-player-cell { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
-    .ranking-avatar { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #333; border: 1px solid #f1c40f; flex-shrink: 0; }
+    .ranking-player-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-start; }
+    .ranking-avatar { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: #333; border: 1px solid #f1c40f; flex-shrink: 0; }
     .ranking-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
   </style>
 </head>
@@ -117,11 +125,11 @@
       <div class="player-select" id="player-container"></div>
 
       <div class="difficulty-select">
-        <label for="difficulty">Dificuldade: </label>
+        <label for="difficulty">Dificuldade:</label>
         <select id="difficulty">
-          <option value="easy">Fácil (Alvo Lento)</option>
-          <option value="medium" selected>Médio (Alvo Normal)</option>
-          <option value="hard">Difícil (Alvo Rápido)</option>
+          <option value="easy">Fácil</option>
+          <option value="medium" selected>Médio</option>
+          <option value="hard">Difícil</option>
         </select>
       </div>
 
@@ -171,84 +179,61 @@
 
     let selectedPlayer = players[0];
     let score = 0, attempts = 5, isGaming = false, isServing = false, celebrationText = '', celebrationTimer = 0;
-    let target = { x: 100, y: 100, radius: 32, speed: 3, direction: 1 };
+    let target = { x: 100, y: 100, radius: 30, speed: 3, direction: 1 };
     let ball = { x: 400, y: 520, startX: 400, startY: 520, radius: 12, targetX: 0, targetY: 0, progress: 0, speed: 0.04 };
     let aimAngle = 0, aimSpeed = 0.03;
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // --- GERADOR DE ÁUDIO SINTETIZADO (Web Audio API) ---
+    // --- GERADOR DE ÁUDIO (Web Audio API) ---
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
-    function initAudio() {
-      if (!audioCtx) audioCtx = new AudioCtx();
-    }
+    function initAudio() { if (!audioCtx) audioCtx = new AudioCtx(); }
 
     function playServeSound() {
-      initAudio();
-      if (!audioCtx) return;
+      initAudio(); if (!audioCtx) return;
       const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(150, now);
       osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
-      
       gain.gain.setValueAtTime(0.8, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-      
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(now);
-      osc.stop(now + 0.2);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.2);
     }
 
     function playHitSound() {
-      initAudio();
-      if (!audioCtx) return;
+      initAudio(); if (!audioCtx) return;
       const now = audioCtx.currentTime;
-      const freqs = [523.25, 659.25, 783.99, 1046.50]; // Acorde alegre C5, E5, G5, C6
-      
+      const freqs = [523.25, 659.25, 783.99, 1046.50];
       freqs.forEach((freq, index) => {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, now + index * 0.08);
-
         gain.gain.setValueAtTime(0.5, now + index * 0.08);
         gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.3);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc.start(now + index * 0.08);
-        osc.stop(now + index * 0.08 + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now + index * 0.08); osc.stop(now + index * 0.08 + 0.3);
       });
     }
 
     function playMissSound() {
-      initAudio();
-      if (!audioCtx) return;
+      initAudio(); if (!audioCtx) return;
       const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(200, now);
       osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
-
       gain.gain.setValueAtTime(0.3, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.25);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.25);
     }
 
     function renderPlayerCards() {
@@ -282,14 +267,14 @@
     function showMenu() { document.getElementById('gameover-screen').classList.add('hidden'); document.getElementById('menu-screen').classList.remove('hidden'); }
     function resetBall() { ball.x = 400; ball.y = 520; ball.progress = 0; isServing = false; document.getElementById('serve-btn').disabled = false; }
     
-    function serveBall() { 
-      if (isServing || attempts <= 0) return; 
-      playServeSound(); 
-      isServing = true; 
-      document.getElementById('serve-btn').disabled = true; 
-      const length = 450; 
-      ball.targetX = ball.startX + Math.sin(aimAngle) * length; 
-      ball.targetY = ball.startY - Math.cos(aimAngle) * length; 
+    function serveBall() {
+      if (isServing || attempts <= 0) return;
+      playServeSound();
+      isServing = true;
+      document.getElementById('serve-btn').disabled = true;
+      const length = 450;
+      ball.targetX = ball.startX + Math.sin(aimAngle) * length;
+      ball.targetY = ball.startY - Math.cos(aimAngle) * length;
     }
 
     function gameLoop() {
@@ -324,7 +309,6 @@
         celebrationTimer = 150;
         isHit = true;
       }
-      
       if (!isHit) playMissSound();
       attempts--;
       document.getElementById('attempts').innerText = attempts;
@@ -339,13 +323,69 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Quadra de Vôlei
       ctx.fillStyle = '#2980b9'; ctx.fillRect(0, 0, canvas.width, 250);
       ctx.fillStyle = '#f39c12'; ctx.fillRect(0, 270, canvas.width, 330);
       ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(120, 320); ctx.lineTo(680, 320); ctx.lineTo(760, 580); ctx.lineTo(40, 580); ctx.closePath(); ctx.stroke();
       
-      ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#f39c12'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
+      // DESENHAR SETA / LINHA DE MIRA ANIMADA (QUANDO PREPARANDO O SAQUE)
+      if (!isServing) {
+        const length = 180;
+        const endX = ball.startX + Math.sin(aimAngle) * length;
+        const endY = ball.startY - Math.cos(aimAngle) * length;
+
+        ctx.save();
+        ctx.strokeStyle = '#f1c40f';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(ball.startX, ball.startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        // Cabeça da Flecha
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.arc(endX, endY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // DESENHAR ALVO BONITO (ANÉIS CONCÊNTRICOS COM GLOW)
+      ctx.save();
+      ctx.shadowColor = '#e74c3c';
+      ctx.shadowBlur = 15;
       
+      // Anel Externo Vermelho
+      ctx.fillStyle = '#e74c3c';
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Anel Intermediário Branco
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.radius * 0.65, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Centro Amarelo/Dourado
+      ctx.fillStyle = '#f1c40f';
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.radius * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Bola
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#f39c12'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.restore();
+      
+      // Texto de Celebração
       if (celebrationTimer > 0) {
         ctx.save();
         ctx.font = 'bold 35px Segoe UI'; ctx.fillStyle = '#f1c40f'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.textAlign = 'center';
