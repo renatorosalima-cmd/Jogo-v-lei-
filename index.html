@@ -349,7 +349,6 @@
       isServing = true;
       document.getElementById('serve-btn').disabled = true;
 
-      // Trajetória garantida até a linha de altura do alvo (Y = 110)
       const targetY = target.y; 
       const deltaY = ball.startY - targetY;
       const deltaX = Math.tan(aimAngle) * deltaY;
@@ -370,7 +369,6 @@
         if (aimAngle > 0.85 || aimAngle < -0.85) aimSpeed *= -1; 
       }
 
-      // Atualiza o alvo continuamente (mesmo durante o saque)
       target.x += target.speed * target.direction;
       if (target.x + target.radius > canvas.width - 20 || target.x - target.radius < 20) {
         target.direction *= -1;
@@ -393,7 +391,6 @@
     function checkHit() {
       if (attempts <= 0) return; 
 
-      // Verificação precisa baseada no alinhamento horizontal (X) no momento da chegada
       const diffX = Math.abs(ball.x - target.x);
       const hitRadius = target.radius + ball.radius; 
       let isHit = false;
@@ -452,32 +449,32 @@
       ctx.beginPath(); ctx.moveTo(0, 250); ctx.lineTo(canvas.width, 250); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0, 270); ctx.lineTo(canvas.width, 270); ctx.stroke();
 
-      // LINHA DE MIRA ANIMADA
+      // MIRA DE SAQUE COMPACTA E DISCRETA (Tamanho Reduzido)
       if (!isServing) {
-        const deltaY = ball.startY - target.y;
-        const deltaX = Math.tan(aimAngle) * deltaY;
-        const endX = ball.startX + deltaX;
-        const endY = target.y;
+        const aimLength = 65; // Tamanho reduzido para não poluir o campo
+        const endX = ball.startX + Math.sin(aimAngle) * aimLength;
+        const endY = ball.startY - Math.cos(aimAngle) * aimLength;
 
         ctx.save();
         let aimGrad = ctx.createLinearGradient(ball.startX, ball.startY, endX, endY);
         aimGrad.addColorStop(0, 'rgba(241, 196, 15, 0.2)');
-        aimGrad.addColorStop(1, 'rgba(241, 196, 15, 1)');
+        aimGrad.addColorStop(1, 'rgba(241, 196, 15, 0.9)');
 
         ctx.strokeStyle = aimGrad;
-        ctx.lineWidth = 4;
-        ctx.setLineDash([10, 8]);
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 5]);
         ctx.beginPath();
         ctx.moveTo(ball.startX, ball.startY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
 
+        // Ponto Indicador na ponta da seta
         ctx.setLineDash([]);
         ctx.fillStyle = '#f1c40f';
         ctx.shadowColor = '#f1c40f';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 6;
         ctx.beginPath();
-        ctx.arc(endX, endY, 7, 0, Math.PI * 2);
+        ctx.arc(endX, endY, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
