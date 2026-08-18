@@ -123,7 +123,6 @@
     
     canvas { display: block; width: 100%; height: 100%; }
     
-    /* HUD Moderno */
     #hud { 
       position: absolute; 
       top: 15px; 
@@ -162,7 +161,6 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
     
-    /* Botão SACAR Estilizado */
     #serve-btn { 
       position: absolute; 
       bottom: 20px; 
@@ -257,7 +255,7 @@
 
     let selectedPlayer = players[0];
     let score = 0, attempts = 5, isGaming = false, isServing = false, celebrationText = '', celebrationTimer = 0;
-    let target = { x: 100, y: 110, radius: 32, speed: 3, direction: 1 };
+    let target = { x: 100, y: 110, radius: 34, speed: 3, direction: 1 };
     let ball = { x: 400, y: 520, startX: 400, startY: 520, radius: 14, targetX: 0, targetY: 0, progress: 0, speed: 0.04 };
     let aimAngle = 0, aimSpeed = 0.03;
 
@@ -362,15 +360,24 @@
     }
 
     function update() {
-      target.x += target.speed * target.direction;
-      if (target.x + target.radius > canvas.width - 30 || target.x - target.radius < 30) target.direction *= -1;
       if (!isServing) { aimAngle += aimSpeed; if (aimAngle > 0.8 || aimAngle < -0.8) aimSpeed *= -1; }
       if (isServing) {
         ball.progress += ball.speed;
         ball.x = ball.startX + (ball.targetX - ball.startX) * ball.progress;
         ball.y = ball.startY + (ball.targetY - ball.startY) * ball.progress;
-        if (ball.progress >= 1) checkHit();
+        
+        if (ball.progress >= 1) {
+          checkHit();
+          return; // Para não atualizar a posição do alvo após a verificação de acerto
+        }
       }
+
+      // Atualiza posição do alvo e rebate nas bordas
+      target.x += target.speed * target.direction;
+      if (target.x + target.radius > canvas.width - 30 || target.x - target.radius < 30) {
+        target.direction *= -1;
+      }
+
       if (celebrationTimer > 0) celebrationTimer--;
     }
 
@@ -378,8 +385,11 @@
       if (attempts <= 0) return; 
 
       const dist = Math.hypot(ball.x - target.x, ball.y - target.y);
+      // Margem de tolerância para acertos perfeitos nas extremidades
+      const tolerance = 6; 
       let isHit = false;
-      if (dist < target.radius + ball.radius) {
+
+      if (dist <= target.radius + ball.radius + tolerance) {
         score += 10;
         playHitSound();
         document.getElementById('score').innerText = score;
@@ -387,6 +397,7 @@
         celebrationTimer = 150;
         isHit = true;
       }
+      
       if (!isHit) playMissSound();
       attempts--;
       document.getElementById('attempts').innerText = attempts;
@@ -422,7 +433,7 @@
       ctx.moveTo(100, 310); ctx.lineTo(700, 310); ctx.lineTo(770, 580); ctx.lineTo(30, 580); 
       ctx.closePath(); 
       ctx.stroke();
-      ctx.shadowBlur = 0; // Reset Shadow
+      ctx.shadowBlur = 0;
 
       // Rede de Vôlei Detalhada
       ctx.fillStyle = 'rgba(255,255,255,0.2)';
@@ -489,14 +500,12 @@
 
       // BOLA DE VÔLEI COM SOMBRA PROJETADA
       ctx.save();
-      // Sombra na Areia
       const ballScale = 1 - (ball.progress * 0.3);
       ctx.fillStyle = 'rgba(0,0,0,0.25)';
       ctx.beginPath();
       ctx.ellipse(ball.x, ball.y + 15 * ballScale, ball.radius * ballScale, (ball.radius / 2) * ballScale, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Corpo da Bola
       ctx.shadowColor = 'rgba(0,0,0,0.5)';
       ctx.shadowBlur = 10;
       ctx.fillStyle = '#fbbf24'; 
