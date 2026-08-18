@@ -3,31 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vôlei de Areia - Saque no Alvo</title>
+  <title>Vôlei de Areia - Saque no Alvo Pro</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
     body { background: #111; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
-    #game-container { position: relative; width: 800px; height: 600px; background: linear-gradient(to bottom, #38ef7d, #11998e); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.88); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; padding: 20px; }
+    #game-container { position: relative; width: 800px; height: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.90); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; padding: 20px; }
     .hidden { display: none !important; }
-    h1 { font-size: 32px; color: #f1c40f; margin-bottom: 20px; text-shadow: 2px 2px #000; }
-    .player-select { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 20px; max-width: 600px; }
-    .player-card { background: #222; border: 3px solid transparent; border-radius: 8px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.2s; width: 90px; }
-    .player-card:hover, .player-card.selected { border-color: #f1c40f; transform: scale(1.05); }
-    .player-card img { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; background: #333; }
-    .player-card p { margin-top: 5px; font-weight: bold; font-size: 14px; }
-    .difficulty-select { margin-bottom: 20px; }
+    h1 { font-size: 32px; color: #f1c40f; margin-bottom: 15px; text-shadow: 2px 2px #000; }
+    
+    .player-select { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 15px; max-width: 750px; }
+    .player-card { background: #222; border: 2px solid #444; border-radius: 8px; padding: 8px; cursor: pointer; text-align: center; transition: all 0.2s; width: 110px; }
+    .player-card:hover, .player-card.selected { border-color: #f1c40f; transform: scale(1.04); background: #2c2c2c; }
+    .player-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #333; }
+    .player-card p { margin: 3px 0; font-weight: bold; font-size: 13px; color: #f1c40f; }
+    
+    .stats-list { font-size: 10px; text-align: left; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 4px; line-height: 1.2; color: #ccc; }
+    
+    .difficulty-select { margin-bottom: 15px; }
     select, button { padding: 10px 20px; font-size: 16px; border-radius: 5px; border: none; cursor: pointer; }
     button { background: #e67e22; color: white; font-weight: bold; }
     button:hover { background: #d35400; }
-    .btn-exit { background: #c0392b; margin-left: 10px; padding: 5px 15px; font-size: 14px; }
+    .btn-exit { background: #c0392b; margin-left: 10px; padding: 5px 12px; font-size: 13px; }
     .btn-exit:hover { background: #a93226; }
+    
     canvas { display: block; width: 100%; height: 100%; }
     #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
-    .avatar-hud { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.6); padding: 5px 15px 5px 5px; border-radius: 30px; pointer-events: auto; }
-    .avatar-hud img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #f1c40f; object-fit: cover; }
-    .stats { background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; font-size: 18px; font-weight: bold; color: #f1c40f; }
-    #serve-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 15px 40px; font-size: 20px; background: #27ae60; box-shadow: 0 4px #1e8449; }
+    .avatar-hud { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.7); padding: 5px 15px 5px 5px; border-radius: 30px; pointer-events: auto; }
+    .avatar-hud img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #f1c40f; object-fit: cover; }
+    .stats { background: rgba(0,0,0,0.7); padding: 8px 18px; border-radius: 20px; font-size: 16px; font-weight: bold; color: #f1c40f; }
+    #serve-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 14px 38px; font-size: 18px; background: #27ae60; box-shadow: 0 4px #1e8449; }
+    
     .ranking-table { width: 100%; max-width: 400px; margin-top: 15px; border-collapse: collapse; }
     .ranking-table th, .ranking-table td { padding: 8px; text-align: center; border-bottom: 1px solid #444; }
     .ranking-table th { color: #f1c40f; }
@@ -86,13 +92,14 @@
   </div>
 
   <script>
+    // Jogadores com Atributos
     const players = [
-      { name: 'Ramon', avatar: 'ramon_avatar.png' },
-      { name: 'Tato', avatar: 'tato_avatar.png' },
-      { name: 'Ta', avatar: 'ta_avatar.png' },
-      { name: 'Mi', avatar: 'mi.png' },
-      { name: 'Manel', avatar: 'manel.png' },
-      { name: 'Kami', avatar: 'kami.png' }
+      { name: 'Ramon', avatar: 'ramon_avatar.png', stats: { forca: 9, precisao: 7, reflexo: 7, agilidade: 4 } },
+      { name: 'Tato', avatar: 'tato.png', stats: { forca: 7, precisao: 9, reflexo: 6, agilidade: 6 } },
+      { name: 'Ta', avatar: 'ta.png', stats: { forca: 6, precisao: 8, reflexo: 8, agilidade: 7 } },
+      { name: 'Mi', avatar: 'mi.png', stats: { forca: 5, precisao: 9, reflexo: 9, agilidade: 8 } },
+      { name: 'Manel', avatar: 'manel.png', stats: { forca: 8, precisao: 6, reflexo: 7, agilidade: 9 } },
+      { name: 'Kami', avatar: 'kami_avatar.png', stats: { forca: 7, precisao: 8, reflexo: 9, agilidade: 6 } }
     ];
 
     let selectedPlayer = players[0];
@@ -101,13 +108,13 @@
     let isGaming = false;
     let isServing = false;
 
-    // Propriedades do Alvo
+    // Efeito de Comemoração
+    let celebrationText = '';
+    let celebrationTimer = 0;
+
     let target = { x: 100, y: 100, radius: 32, speed: 3, direction: 1 };
-    
-    // Propriedades da Bola
     let ball = { x: 400, y: 520, startX: 400, startY: 520, radius: 12, targetX: 0, targetY: 0, progress: 0, speed: 0.04 };
 
-    // Direção da Seta (Ângulo de Mira)
     let aimAngle = 0;
     let aimSpeed = 0.03;
 
@@ -121,7 +128,14 @@
         const card = document.createElement('div');
         card.className = `player-card ${index === 0 ? 'selected' : ''}`;
         card.onclick = () => selectPlayer(p, card);
-        card.innerHTML = `<img src="${p.avatar}" alt="${p.name}"><p>${p.name}</p>`;
+        card.innerHTML = `
+          <img src="${p.avatar}" alt="${p.name}">
+          <p>${p.name}</p>
+          <div class="stats-list">
+            F: ${p.stats.forca} | P: ${p.stats.precisao}<br>
+            R: ${p.stats.reflexo} | A: ${p.stats.agilidade}
+          </div>
+        `;
         container.appendChild(card);
       });
     }
@@ -181,7 +195,6 @@
       isServing = true;
       document.getElementById('serve-btn').disabled = true;
 
-      // Trajetória reta apontando para onde a seta estava direcionada
       const length = 450;
       ball.targetX = ball.startX + Math.sin(aimAngle) * length;
       ball.targetY = ball.startY - Math.cos(aimAngle) * length;
@@ -195,27 +208,26 @@
     }
 
     function update() {
-      // Movimento do Alvo
       target.x += target.speed * target.direction;
       if (target.x + target.radius > canvas.width - 20 || target.x - target.radius < 20) {
         target.direction *= -1;
       }
 
-      // Oscilação da Seta quando está mirando
       if (!isServing) {
         aimAngle += aimSpeed;
-        if (aimAngle > 0.8 || aimAngle < -0.8) {
-          aimSpeed *= -1;
-        }
+        if (aimAngle > 0.8 || aimAngle < -0.8) aimSpeed *= -1;
       }
 
-      // Trajetória em Linha Reta da Bola
       if (isServing) {
         ball.progress += ball.speed;
         ball.x = ball.startX + (ball.targetX - ball.startX) * ball.progress;
         ball.y = ball.startY + (ball.targetY - ball.startY) * ball.progress;
 
         if (ball.progress >= 1) checkHit();
+      }
+
+      if (celebrationTimer > 0) {
+        celebrationTimer--;
       }
     }
 
@@ -224,6 +236,10 @@
       if (dist < target.radius + ball.radius) {
         score += 10;
         document.getElementById('score').innerText = score;
+        
+        // Ativa Comemoração
+        celebrationText = "PONTO PERFEITO! 🎉";
+        celebrationTimer = 40;
       }
       attempts--;
       document.getElementById('attempts').innerText = attempts;
@@ -235,93 +251,100 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Céu
-      let skyGradient = ctx.createLinearGradient(0, 0, 0, 300);
-      skyGradient.addColorStop(0, '#3498db');
+      // 1. CÉU DE PRAIA
+      let skyGradient = ctx.createLinearGradient(0, 0, 0, 250);
+      skyGradient.addColorStop(0, '#1a5276');
+      skyGradient.addColorStop(0.5, '#2980b9');
       skyGradient.addColorStop(1, '#f39c12');
       ctx.fillStyle = skyGradient;
-      ctx.fillRect(0, 0, canvas.width, 350);
+      ctx.fillRect(0, 0, canvas.width, 250);
 
-      // Sol
+      // Sol Tropical
       ctx.fillStyle = '#f1c40f';
       ctx.beginPath();
-      ctx.arc(700, 80, 40, 0, Math.PI * 2);
+      ctx.arc(680, 70, 35, 0, Math.PI * 2);
       ctx.fill();
 
-      // Areia
-      let sandGradient = ctx.createLinearGradient(0, 350, 0, 600);
-      sandGradient.addColorStop(0, '#e67e22');
-      sandGradient.addColorStop(1, '#f1c40f');
+      // MAR
+      ctx.fillStyle = '#117864';
+      ctx.fillRect(0, 240, canvas.width, 30);
+
+      // 2. QUADRA DE AREIA
+      let sandGradient = ctx.createLinearGradient(0, 270, 0, 600);
+      sandGradient.addColorStop(0, '#f5b041');
+      sandGradient.addColorStop(1, '#d35400');
       ctx.fillStyle = sandGradient;
-      ctx.fillRect(0, 350, canvas.width, 250);
+      ctx.fillRect(0, 270, canvas.width, 330);
+
+      // Textura/Sombra da Areia
+      ctx.fillStyle = 'rgba(0,0,0,0.05)';
+      ctx.fillRect(0, 320, canvas.width, 10);
+      ctx.fillRect(0, 420, canvas.width, 15);
 
       // Linhas da Quadra
-      ctx.strokeStyle = 'white';
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(100, 400); ctx.lineTo(700, 400);
-      ctx.lineTo(750, 580); ctx.lineTo(50, 580);
+      ctx.moveTo(120, 320); ctx.lineTo(680, 320);
+      ctx.lineTo(760, 580); ctx.lineTo(40, 580);
       ctx.closePath(); ctx.stroke();
 
-      // Rede
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 300); ctx.lineTo(800, 300); ctx.stroke();
+      // Coqueiros nas laterais
+      drawPalmTree(50, 240);
+      drawPalmTree(750, 240);
 
-      // ALVO MELHORADO
+      // Rede de Vôlei
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(0, 260); ctx.lineTo(800, 260); ctx.stroke();
+
+      // 3. ALVO MELHORADO
       ctx.save();
       ctx.translate(target.x, target.y);
-      // Anel Externo Vermelho
-      ctx.fillStyle = '#e74c3c';
-      ctx.beginPath(); ctx.arc(0, 0, target.radius, 0, Math.PI * 2); ctx.fill();
-      // Anel Branco
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.75, 0, Math.PI * 2); ctx.fill();
-      // Anel Azul
-      ctx.fillStyle = '#2980b9';
-      ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.5, 0, Math.PI * 2); ctx.fill();
-      // Centro Amarelo
-      ctx.fillStyle = '#f1c40f';
-      ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.25, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(0, 0, target.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.75, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2980b9'; ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f1c40f'; ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.25, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
 
-      // FLECHA DE MIRA
+      // 4. SETA DE MIRA
       if (!isServing) {
         ctx.save();
         ctx.translate(ball.startX, ball.startY);
         ctx.rotate(aimAngle);
-
-        ctx.strokeStyle = '#f1c40f';
-        ctx.fillStyle = '#f1c40f';
-        ctx.lineWidth = 4;
-
-        // Haste da flecha
-        ctx.beginPath();
-        ctx.moveTo(0, -20);
-        ctx.lineTo(0, -80);
-        ctx.stroke();
-
-        // Cabeça da flecha
-        ctx.beginPath();
-        ctx.moveTo(-10, -80);
-        ctx.lineTo(0, -100);
-        ctx.lineTo(10, -80);
-        ctx.closePath();
-        ctx.fill();
-
+        ctx.strokeStyle = '#f1c40f'; ctx.fillStyle = '#f1c40f'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(0, -80); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-10, -80); ctx.lineTo(0, -100); ctx.lineTo(10, -80); ctx.closePath(); ctx.fill();
         ctx.restore();
       }
 
-      // Boneco (Costas)
+      // 5. BONECO DE COSTAS
       ctx.fillStyle = '#2c3e50';
       ctx.beginPath(); ctx.ellipse(400, 570, 35, 20, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#d35400';
       ctx.beginPath(); ctx.arc(400, 535, 18, 0, Math.PI * 2); ctx.fill();
 
-      // Bola de Vôlei
+      // BOLA
       ctx.fillStyle = '#f39c12';
       ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2; ctx.stroke();
+
+      // 6. EFEITO DE COMEMORAÇÃO
+      if (celebrationTimer > 0) {
+        ctx.font = 'bold 36px Segoe UI';
+        ctx.fillStyle = '#f1c40f';
+        ctx.textAlign = 'center';
+        ctx.fillText(celebrationText, 400, 200);
+      }
+    }
+
+    function drawPalmTree(x, y) {
+      ctx.fillStyle = '#7e5109';
+      ctx.fillRect(x - 5, y - 40, 10, 50);
+      ctx.fillStyle = '#27ae60';
+      ctx.beginPath(); ctx.arc(x - 15, y - 45, 15, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + 15, y - 45, 15, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y - 55, 15, 0, Math.PI * 2); ctx.fill();
     }
 
     function endGame() {
@@ -334,14 +357,23 @@
     }
 
     function updateOnlineRanking(playerName, playerScore) {
-      // Começa o ranking vazio caso não exista nada salvo
-      let ranking = JSON.parse(localStorage.getItem('volei_ranking')) || [];
+      // Troca a chave de armazenamento para resetar dados antigos zerando o ranking
+      let ranking = JSON.parse(localStorage.getItem('volei_ranking_v2')) || [];
 
       if (playerScore > 0) {
-        ranking.push({ name: playerName, score: playerScore });
+        // Se o jogador já existe no ranking, atualiza caso seja maior
+        const existingIndex = ranking.findIndex(r => r.name === playerName);
+        if (existingIndex !== -1) {
+          if (playerScore > ranking[existingIndex].score) {
+            ranking[existingIndex].score = playerScore;
+          }
+        } else {
+          ranking.push({ name: playerName, score: playerScore });
+        }
+
         ranking.sort((a, b) => b.score - a.score);
         ranking = ranking.slice(0, 5);
-        localStorage.setItem('volei_ranking', JSON.stringify(ranking));
+        localStorage.setItem('volei_ranking_v2', JSON.stringify(ranking));
       }
 
       const tbody = document.getElementById('ranking-body');
