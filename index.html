@@ -20,9 +20,11 @@
     select, button { padding: 10px 20px; font-size: 16px; border-radius: 5px; border: none; cursor: pointer; }
     button { background: #e67e22; color: white; font-weight: bold; }
     button:hover { background: #d35400; }
+    .btn-exit { background: #c0392b; margin-left: 10px; padding: 5px 15px; font-size: 14px; }
+    .btn-exit:hover { background: #a93226; }
     canvas { display: block; width: 100%; height: 100%; }
     #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
-    .avatar-hud { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.6); padding: 5px 15px 5px 5px; border-radius: 30px; }
+    .avatar-hud { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.6); padding: 5px 15px 5px 5px; border-radius: 30px; pointer-events: auto; }
     .avatar-hud img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #f1c40f; object-fit: cover; }
     .stats { background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 20px; font-size: 18px; font-weight: bold; color: #f1c40f; }
     #serve-btn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 15px 40px; font-size: 20px; background: #27ae60; box-shadow: 0 4px #1e8449; }
@@ -34,7 +36,7 @@
 <body>
 
   <div id="game-container">
-    <!-- Menu -->
+    <!-- Menu Principal -->
     <div id="menu-screen" class="screen">
       <h1>Vôlei de Areia: Saque no Alvo</h1>
       <h3>Escolha seu Jogador:</h3>
@@ -52,18 +54,18 @@
       <button onclick="startGame()">INICIAR JOGO</button>
     </div>
 
-    <!-- Game Over -->
+    <!-- Game Over / Ranking -->
     <div id="gameover-screen" class="screen hidden">
       <h1>Fim de Jogo!</h1>
       <p id="final-score" style="font-size: 24px; margin-bottom: 10px;">Pontuação: 0</p>
-      <h3>Ranking Online (Top 5)</h3>
+      <h3>Ranking Online</h3>
       <table class="ranking-table">
         <thead>
           <tr><th>#</th><th>Jogador</th><th>Pontos</th></tr>
         </thead>
         <tbody id="ranking-body"></tbody>
       </table>
-      <button onclick="showMenu()" style="margin-top: 20px;">JOGAR NOVAMENTE</button>
+      <button onclick="showMenu()" style="margin-top: 20px;">MENU PRINCIPAL</button>
     </div>
 
     <!-- HUD -->
@@ -71,6 +73,7 @@
       <div class="avatar-hud">
         <img id="hud-avatar" src="" alt="Jogador">
         <span id="hud-name">Jogador</span>
+        <button class="btn-exit" onclick="quitGame()">Sair</button>
       </div>
       <div class="stats">
         <span>Pontos: <span id="score">0</span></span> | 
@@ -83,10 +86,9 @@
   </div>
 
   <script>
-    // Lista dos seus personagens
     const players = [
-      { name: 'Ramon', avatar: 'ramon.png' },
-      { name: 'Tato', avatar: 'tato.png' },
+      { name: 'Ramon', avatar: 'ramon_avatar.png' },
+      { name: 'Tato', avatar: 'tato_avatar.png' },
       { name: 'Ta', avatar: 'ta.png' },
       { name: 'Mi', avatar: 'mi.png' },
       { name: 'Manel', avatar: 'manel.png' },
@@ -99,13 +101,19 @@
     let isGaming = false;
     let isServing = false;
 
-    let target = { x: 100, y: 100, radius: 30, speed: 3, direction: 1 };
-    let ball = { x: 400, y: 520, startX: 400, startY: 520, radius: 12, targetX: 0, targetY: 0, progress: 0, speed: 0.03 };
+    // Propriedades do Alvo
+    let target = { x: 100, y: 100, radius: 32, speed: 3, direction: 1 };
+    
+    // Propriedades da Bola
+    let ball = { x: 400, y: 520, startX: 400, startY: 520, radius: 12, targetX: 0, targetY: 0, progress: 0, speed: 0.04 };
+
+    // Direção da Seta (Ângulo de Mira)
+    let aimAngle = 0;
+    let aimSpeed = 0.03;
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Carregar cards dos jogadores na tela inicial
     function renderPlayerCards() {
       const container = document.getElementById('player-container');
       container.innerHTML = '';
@@ -148,6 +156,13 @@
       requestAnimationFrame(gameLoop);
     }
 
+    function quitGame() {
+      isGaming = false;
+      document.getElementById('hud').classList.add('hidden');
+      document.getElementById('serve-btn').classList.add('hidden');
+      document.getElementById('menu-screen').classList.remove('hidden');
+    }
+
     function showMenu() {
       document.getElementById('gameover-screen').classList.add('hidden');
       document.getElementById('menu-screen').classList.remove('hidden');
@@ -165,8 +180,11 @@
       if (isServing || attempts <= 0) return;
       isServing = true;
       document.getElementById('serve-btn').disabled = true;
-      ball.targetX = target.x;
-      ball.targetY = target.y;
+
+      // Trajetória reta apontando para onde a seta estava direcionada
+      const length = 450;
+      ball.targetX = ball.startX + Math.sin(aimAngle) * length;
+      ball.targetY = ball.startY - Math.cos(aimAngle) * length;
     }
 
     function gameLoop() {
@@ -177,18 +195,25 @@
     }
 
     function update() {
+      // Movimento do Alvo
       target.x += target.speed * target.direction;
       if (target.x + target.radius > canvas.width - 20 || target.x - target.radius < 20) {
         target.direction *= -1;
       }
 
+      // Oscilação da Seta quando está mirando
+      if (!isServing) {
+        aimAngle += aimSpeed;
+        if (aimAngle > 0.8 || aimAngle < -0.8) {
+          aimSpeed *= -1;
+        }
+      }
+
+      // Trajetória em Linha Reta da Bola
       if (isServing) {
         ball.progress += ball.speed;
-        const currentX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
-        const currentY = ball.startY + (ball.targetY - ball.startY) * ball.progress;
-        const arc = Math.sin(ball.progress * Math.PI) * 120;
-        ball.x = currentX;
-        ball.y = currentY - arc;
+        ball.x = ball.startX + (ball.targetX - ball.startX) * ball.progress;
+        ball.y = ball.startY + (ball.targetY - ball.startY) * ball.progress;
 
         if (ball.progress >= 1) checkHit();
       }
@@ -243,14 +268,49 @@
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(0, 300); ctx.lineTo(800, 300); ctx.stroke();
 
-      // Alvo Móvel
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#e74c3c';
-      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.6, 0, Math.PI * 2); ctx.stroke();
+      // ALVO MELHORADO
+      ctx.save();
+      ctx.translate(target.x, target.y);
+      // Anel Externo Vermelho
       ctx.fillStyle = '#e74c3c';
-      ctx.beginPath(); ctx.arc(target.x, target.y, target.radius * 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, target.radius, 0, Math.PI * 2); ctx.fill();
+      // Anel Branco
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.75, 0, Math.PI * 2); ctx.fill();
+      // Anel Azul
+      ctx.fillStyle = '#2980b9';
+      ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.5, 0, Math.PI * 2); ctx.fill();
+      // Centro Amarelo
+      ctx.fillStyle = '#f1c40f';
+      ctx.beginPath(); ctx.arc(0, 0, target.radius * 0.25, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // FLECHA DE MIRA
+      if (!isServing) {
+        ctx.save();
+        ctx.translate(ball.startX, ball.startY);
+        ctx.rotate(aimAngle);
+
+        ctx.strokeStyle = '#f1c40f';
+        ctx.fillStyle = '#f1c40f';
+        ctx.lineWidth = 4;
+
+        // Haste da flecha
+        ctx.beginPath();
+        ctx.moveTo(0, -20);
+        ctx.lineTo(0, -80);
+        ctx.stroke();
+
+        // Cabeça da flecha
+        ctx.beginPath();
+        ctx.moveTo(-10, -80);
+        ctx.lineTo(0, -100);
+        ctx.lineTo(10, -80);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
 
       // Boneco (Costas)
       ctx.fillStyle = '#2c3e50';
@@ -258,7 +318,7 @@
       ctx.fillStyle = '#d35400';
       ctx.beginPath(); ctx.arc(400, 535, 18, 0, Math.PI * 2); ctx.fill();
 
-      // Bola
+      // Bola de Vôlei
       ctx.fillStyle = '#f39c12';
       ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2; ctx.stroke();
@@ -274,25 +334,28 @@
     }
 
     function updateOnlineRanking(playerName, playerScore) {
-      let ranking = JSON.parse(localStorage.getItem('volei_ranking')) || [
-        { name: 'Ramon', score: 40 },
-        { name: 'Tato', score: 30 },
-        { name: 'Kami', score: 20 }
-      ];
+      // Começa o ranking vazio caso não exista nada salvo
+      let ranking = JSON.parse(localStorage.getItem('volei_ranking')) || [];
 
-      ranking.push({ name: playerName, score: playerScore });
-      ranking.sort((a, b) => b.score - a.score);
-      ranking = ranking.slice(0, 5);
-      localStorage.setItem('volei_ranking', JSON.stringify(ranking));
+      if (playerScore > 0) {
+        ranking.push({ name: playerName, score: playerScore });
+        ranking.sort((a, b) => b.score - a.score);
+        ranking = ranking.slice(0, 5);
+        localStorage.setItem('volei_ranking', JSON.stringify(ranking));
+      }
 
       const tbody = document.getElementById('ranking-body');
       tbody.innerHTML = '';
-      ranking.forEach((rank, index) => {
-        tbody.innerHTML += `<tr><td>${index + 1}º</td><td>${rank.name}</td><td>${rank.score} pts</td></tr>`;
-      });
+
+      if (ranking.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">Nenhuma pontuação registrada ainda.</td></tr>';
+      } else {
+        ranking.forEach((rank, index) => {
+          tbody.innerHTML += `<tr><td>${index + 1}º</td><td>${rank.name}</td><td>${rank.score} pts</td></tr>`;
+        });
+      }
     }
 
-    // Inicializa os cards ao carregar
     renderPlayerCards();
   </script>
 </body>
