@@ -89,20 +89,19 @@
       box-shadow: 0 6px 15px rgba(0,0,0,0.15);
     }
 
-    /* ESTILO DO JOGADOR SELECIONADO (CORRIGIDO) */
     .player-card.selected { 
-      background: #fef08a !important; /* Amarelo vibrante */
-      border: 4px solid #f59e0b !important; /* Borda Laranja/Dourada */
-      transform: scale(1.05); /* Leve zoom */
-      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.5) !important; /* Sombra chamativa */
+      background: #fef08a !important; 
+      border: 4px solid #f59e0b !important; 
+      transform: scale(1.05); 
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.5) !important; 
     }
 
     .player-card.selected p {
-      color: #78350f; /* Texto do nome em tom escuro para alto contraste */
+      color: #78350f; 
     }
 
     .player-card.selected .avatar-wrapper {
-      border-color: #f59e0b; /* Borda da foto acompanha a seleção */
+      border-color: #f59e0b; 
     }
     
     .avatar-wrapper {
@@ -263,10 +262,10 @@
     <div id="gameover-screen" class="screen hidden">
       <h1>Fim de Jogo!</h1>
       <p id="final-score" style="font-size: 22px; margin-bottom: 5px; color: #0284c7; font-weight: 800;">Pontuação: 0</p>
-      <h3>Ranking Geral</h3>
+      <h3>Ranking Acumulado</h3>
       <table class="ranking-table">
         <thead>
-          <tr><th>#</th><th style="text-align: left; padding-left: 10px;">Jogador</th><th>Pontos</th></tr>
+          <tr><th>#</th><th style="text-align: left; padding-left: 10px;">Jogador</th><th>Pontos Acumulados</th></tr>
         </thead>
         <tbody id="ranking-body"></tbody>
       </table>
@@ -583,15 +582,16 @@
       document.getElementById('hud').classList.add('hidden');
       document.getElementById('serve-btn').classList.add('hidden');
       document.getElementById('gameover-screen').classList.remove('hidden');
-      document.getElementById('final-score').innerText = `Pontuação Final: ${score}`;
+      document.getElementById('final-score').innerText = `Pontuação Nesta Partida: ${score}`;
       saveAndRenderRanking(selectedPlayer, score);
     }
 
+    // --- LÓGICA DE SOMA ACUMULATIVA DE PONTOS ---
     function saveAndRenderRanking(player, playerScore) {
       let ranking = [];
       
       try {
-        ranking = JSON.parse(localStorage.getItem('volei_ranking_v4')) || [];
+        ranking = JSON.parse(localStorage.getItem('volei_ranking_v5')) || [];
       } catch (e) {
         ranking = [];
       }
@@ -600,17 +600,17 @@
         const existingIndex = ranking.findIndex(r => r.name === player.name);
         
         if (existingIndex !== -1) {
-          if (playerScore > ranking[existingIndex].score) {
-            ranking[existingIndex].score = playerScore;
-            ranking[existingIndex].avatar = player.avatar;
-          }
+          // Soma a nova pontuação ao saldo total acumulado do jogador
+          ranking[existingIndex].score += playerScore;
+          ranking[existingIndex].avatar = player.avatar;
         } else {
+          // Adiciona um novo jogador com a pontuação inicial
           ranking.push({ name: player.name, avatar: player.avatar, score: playerScore });
         }
 
         ranking.sort((a, b) => b.score - a.score);
         ranking = ranking.slice(0, 5);
-        localStorage.setItem('volei_ranking_v4', JSON.stringify(ranking));
+        localStorage.setItem('volei_ranking_v5', JSON.stringify(ranking));
       }
 
       renderRankingTable(ranking);
