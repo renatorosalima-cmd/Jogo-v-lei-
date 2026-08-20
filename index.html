@@ -91,7 +91,6 @@
       box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
     }
     
-    /* CÍRCULO AUMENTADO PARA 105px E ENQUADRAMENTO DA CINTURA PRA CIMA */
     .avatar-wrapper {
       width: 105px;
       height: 105px;
@@ -110,7 +109,7 @@
       width: 100%; 
       height: 100%; 
       object-fit: cover; 
-      object-position: center 20%; /* Foca da cintura para cima */
+      object-position: center 20%; 
     }
 
     .player-card p { margin: 5px 0 2px 0; font-weight: 800; font-size: 13px; color: #0f172a; }
@@ -244,7 +243,7 @@
     <div id="gameover-screen" class="screen hidden">
       <h1>Fim de Jogo!</h1>
       <p id="final-score" style="font-size: 22px; margin-bottom: 5px; color: #0284c7; font-weight: 800;">Pontuação: 0</p>
-      <h3>Ranking Online</h3>
+      <h3>Ranking Geral</h3>
       <table class="ranking-table">
         <thead>
           <tr><th>#</th><th style="text-align: left; padding-left: 10px;">Jogador</th><th>Pontos</th></tr>
@@ -274,12 +273,12 @@
 
   <script>
     const players = [
-      { name: 'Ramon', avatar: 'ramon_avatar.png', stats: { forca: 9, precisao: 7, reflexo: 7, agilidade: 4 } },
-      { name: 'Tato', avatar: 'tato_avatar.png', stats: { forca: 7, precisao: 9, reflexo: 6, agilidade: 6 } },
-      { name: 'Ta', avatar: 'ta_avatar.png', stats: { forca: 6, precisao: 8, reflexo: 8, agilidade: 7 } },
-      { name: 'Mi', avatar: 'mi_avatar.png', stats: { forca: 5, precisao: 9, reflexo: 9, agilidade: 8 } },
-      { name: 'Manel', avatar: 'manel_avatar.png', stats: { forca: 8, precisao: 6, reflexo: 7, agilidade: 9 } },
-      { name: 'Kami', avatar: 'kami_avatar.png', stats: { forca: 7, precisao: 8, reflexo: 9, agilidade: 6 } }
+      { name: 'Ramon', avatar: 'ramon_avatar.png', stats: { forca: 9, precisao: 7, reflexo: 6, agilidade: 4 } },
+      { name: 'Tato', avatar: 'tato_avatar.png', stats: { forca: 7, precisao: 7, reflexo: 9, agilidade: 9 } },
+      { name: 'Ta', avatar: 'ta_avatar.png', stats: { forca: 8, precisao: 7, reflexo: 5, agilidade: 6 } },
+      { name: 'Mi', avatar: 'mi_avatar.png', stats: { forca: 5, precisao: 9, reflexo: 4, agilidade: 6 } },
+      { name: 'Manel', avatar: 'manel_avatar.png', stats: { forca: 8, precisao: 9, reflexo: 8, agilidade: 9 } },
+      { name: 'Kami', avatar: 'kami_avatar.png', stats: { forca: 6, precisao: 7, reflexo: 7, agilidade: 8 } }
     ];
 
     let selectedPlayer = players[0];
@@ -561,39 +560,56 @@
       document.getElementById('serve-btn').classList.add('hidden');
       document.getElementById('gameover-screen').classList.remove('hidden');
       document.getElementById('final-score').innerText = `Pontuação Final: ${score}`;
-      updateOnlineRanking(selectedPlayer, score);
+      saveAndRenderRanking(selectedPlayer, score);
     }
 
-    function updateOnlineRanking(player, playerScore) {
-      let ranking = JSON.parse(localStorage.getItem('volei_ranking_v3')) || [];
-      const existingIndex = ranking.findIndex(r => r.name === player.name);
+    // --- LÓGICA CORRIGIDA DO RANKING ---
+    function saveAndRenderRanking(player, playerScore) {
+      let ranking = [];
       
-      if (existingIndex !== -1) { 
-        if (playerScore > ranking[existingIndex].score) {
-          ranking[existingIndex].score = playerScore;
-          ranking[existingIndex].avatar = player.avatar;
-        }
-      } else { 
-        ranking.push({ name: player.name, avatar: player.avatar, score: playerScore }); 
+      try {
+        ranking = JSON.parse(localStorage.getItem('volei_ranking_v4')) || [];
+      } catch (e) {
+        ranking = [];
       }
 
-      ranking.sort((a, b) => b.score - a.score);
-      ranking = ranking.slice(0, 5);
-      localStorage.setItem('volei_ranking_v3', JSON.stringify(ranking));
+      if (player && playerScore !== undefined) {
+        const existingIndex = ranking.findIndex(r => r.name === player.name);
+        
+        if (existingIndex !== -1) {
+          if (playerScore > ranking[existingIndex].score) {
+            ranking[existingIndex].score = playerScore;
+            ranking[existingIndex].avatar = player.avatar;
+          }
+        } else {
+          ranking.push({ name: player.name, avatar: player.avatar, score: playerScore });
+        }
 
+        ranking.sort((a, b) => b.score - a.score);
+        ranking = ranking.slice(0, 5);
+        localStorage.setItem('volei_ranking_v4', JSON.stringify(ranking));
+      }
+
+      renderRankingTable(ranking);
+    }
+
+    function renderRankingTable(ranking) {
       const tbody = document.getElementById('ranking-body');
       tbody.innerHTML = '';
-      ranking.forEach((rank, index) => { 
-        const pInfo = players.find(p => p.name === rank.name);
-        const avatarSrc = rank.avatar || (pInfo ? pInfo.avatar : 'ramon_avatar.png');
 
+      if (ranking.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">Nenhuma pontuação registrada ainda!</td></tr>';
+        return;
+      }
+
+      ranking.forEach((rank, index) => { 
         tbody.innerHTML += `
           <tr>
             <td>${index + 1}º</td>
             <td>
               <div class="ranking-player-cell">
                 <div class="ranking-avatar">
-                  <img src="${avatarSrc}" alt="${rank.name}">
+                  <img src="${rank.avatar}" alt="${rank.name}">
                 </div>
                 <span>${rank.name}</span>
               </div>
@@ -603,7 +619,9 @@
       });
     }
 
+    // INICIALIZAÇÃO
     renderPlayerCards();
+    saveAndRenderRanking(null, undefined); // Carrega a tabela na abertura do script
   </script>
 </body>
 </html>
