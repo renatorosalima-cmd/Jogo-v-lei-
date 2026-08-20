@@ -96,13 +96,8 @@
       box-shadow: 0 8px 20px rgba(245, 158, 11, 0.5) !important; 
     }
 
-    .player-card.selected p {
-      color: #78350f; 
-    }
-
-    .player-card.selected .avatar-wrapper {
-      border-color: #f59e0b; 
-    }
+    .player-card.selected p { color: #78350f; }
+    .player-card.selected .avatar-wrapper { border-color: #f59e0b; }
     
     .avatar-wrapper {
       width: 105px;
@@ -262,12 +257,14 @@
     <div id="gameover-screen" class="screen hidden">
       <h1>Fim de Jogo!</h1>
       <p id="final-score" style="font-size: 22px; margin-bottom: 5px; color: #0284c7; font-weight: 800;">Pontuação: 0</p>
-      <h3>Ranking Acumulado</h3>
+      <h3>Ranking Geral Online</h3>
       <table class="ranking-table">
         <thead>
           <tr><th>#</th><th style="text-align: left; padding-left: 10px;">Jogador</th><th>Pontos Acumulados</th></tr>
         </thead>
-        <tbody id="ranking-body"></tbody>
+        <tbody id="ranking-body">
+          <tr><td colspan="3">Carregando ranking online...</td></tr>
+        </tbody>
       </table>
       <button onclick="showMenu()" style="margin-top: 15px;">MENU PRINCIPAL</button>
     </div>
@@ -291,6 +288,10 @@
   </div>
 
   <script>
+    // Configurações do Banco de Dados Online (JSONBin)
+    const JSONBIN_BIN_ID = '6a87848bda38895dfefd3efe';
+    const JSONBIN_API_KEY = '$2a$10$5f06CTcdIqifY8MzTw.OvO4nXYEp8yk8Dbyej3hBkRw8MyroHRB1.';
+
     const players = [
       { name: 'Ramon', avatar: 'ramon_avatar.png', stats: { forca: 9, precisao: 7, reflexo: 7, agilidade: 4 } },
       { name: 'Tato', avatar: 'tato_avatar.png', stats: { forca: 7, precisao: 9, reflexo: 6, agilidade: 6 } },
@@ -583,34 +584,53 @@
       document.getElementById('serve-btn').classList.add('hidden');
       document.getElementById('gameover-screen').classList.remove('hidden');
       document.getElementById('final-score').innerText = `Pontuação Nesta Partida: ${score}`;
-      saveAndRenderRanking(selectedPlayer, score);
+      saveAndRenderOnlineRanking(selectedPlayer, score);
     }
 
-    // --- LÓGICA DE SOMA ACUMULATIVA DE PONTOS ---
-    function saveAndRenderRanking(player, playerScore) {
-      let ranking = [];
-      
+    async function getOnlineRanking() {
       try {
-        ranking = JSON.parse(localStorage.getItem('volei_ranking_v5')) || [];
-      } catch (e) {
-        ranking = [];
+        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+          headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        });
+        const data = await response.json();
+        let records = data.record || [];
+        return records.filter(r => r.name !== 'Teste');
+      } catch (error) {
+        console.error('Erro ao buscar ranking:', error);
+        return [];
       }
+    }
+
+    async function saveAndRenderOnlineRanking(player, playerScore) {
+      document.getElementById('ranking-body').innerHTML = '<tr><td colspan="3">Atualizando ranking online...</td></tr>';
+      
+      let ranking = await getOnlineRanking();
 
       if (player && playerScore !== undefined) {
         const existingIndex = ranking.findIndex(r => r.name === player.name);
         
         if (existingIndex !== -1) {
-          // Soma a nova pontuação ao saldo total acumulado do jogador
           ranking[existingIndex].score += playerScore;
           ranking[existingIndex].avatar = player.avatar;
         } else {
-          // Adiciona um novo jogador com a pontuação inicial
           ranking.push({ name: player.name, avatar: player.avatar, score: playerScore });
         }
 
         ranking.sort((a, b) => b.score - a.score);
-        ranking = ranking.slice(0, 5);
-        localStorage.setItem('volei_ranking_v5', JSON.stringify(ranking));
+        ranking = ranking.slice(0, 10);
+
+        try {
+          await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': JSONBIN_API_KEY
+            },
+            body: JSON.stringify(ranking)
+          });
+        } catch (error) {
+          console.error('Erro ao salvar ranking:', error);
+        }
       }
 
       renderRankingTable(ranking);
@@ -643,7 +663,6 @@
     }
 
     renderPlayerCards();
-    saveAndRenderRanking(null, undefined);
   </script>
 </body>
 </html>
